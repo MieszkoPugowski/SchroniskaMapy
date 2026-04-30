@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Schroniska.pl - Rezerwacja miejsc</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #003580; /* Klasyczny kolor bookingowy */
+            --accent: #febb02;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f5f5f5; }
+
+        /* Pasek nawigacji */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Kontener główny */
+        .main-container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Lista schronisk (lewa strona) */
+        .listing-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+
+        .card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        .card-info h3 { margin: 0 0 5px 0; color: var(--primary); }
+
+        /* Kontener MAPY (prawa strona) */
+        .map-wrapper {
+            position: sticky;
+            top: 20px;
+            border: 4px solid var(--accent);
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            
+            /* Startowe ograniczenie wymiarów */
+            width: 450px; 
+            height: 400px;
+            
+            /* Możliwość rozszerzania przez użytkownika */
+            resize: both; 
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .btn-book {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @media (max-width: 900px) {
+            .main-container { flex-direction: column-reverse; }
+            .map-wrapper { width: 100%; height: 300px; position: static; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Schroniska.pl</h1>
+    <div>Logowanie | Utwórz konto</div>
+</header>
+
+<div class="main-container">
+    <!-- Lista schronisk -->
+    <section class="listing-section" id="listing">
+        <div class="card">
+            <div class="card-info">
+                <h3>Ładowanie obiektów...</h3>
+                <p>Wybierz schronisko z mapy lub listy.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mapa w okienku -->
+    <div class="map-wrapper">
+        <div id="map"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+    // Inicjalizacja Mapy
+    const map = L.map('map').setView([49.5, 20.0], 8);
+
+    const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenTopoMap'
+    }).addTo(map);
+
+    const trails = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png').addTo(map);
+
+    // Funkcja do wczytywania danych
+    async function loadSchroniska() {
+        try {
+            const response = await fetch('schroniska.xlsx');
+            const arrayBuffer = await response.arrayBuffer();
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+            const listingElement = document.getElementById('listing');
+            listingElement.innerHTML = ""; // Czyścimy listę "ładowania"
+
+            jsonData.forEach(item => {
+                if (item.lat && item.lon) {
+                    // 1. Dodajemy Marker na mapie
+                    const marker = L.marker([item.lat, item.lon]).addTo(map);
+                    
+                    const popupContent = `
+                        <b>${item["Nazwa schroniska"]}</b><br>
+                        Wysokość: ${item["Wysokość n.p.m."]} m<br>
+                        <button class="btn-book" onclick="alert('Przekierowanie do systemu rezerwacji...')">Zarezerwuj</button>
+                    `;
+                    marker.bindPopup(popupContent);
+
+                    // 2. Dodajemy Kartę do listy obok
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div class="card-info">
+                            <h3>${item["Nazwa schroniska"]}</h3>
+                            <p><b>Lokalizacja:</b> ${item.Lokalizacja}</p>
+                            <p><b>Pasmo:</b> ${item["Pasmo górskie"] || 'Góry'}</p>
+                            <p><b>Tel:</b> ${item.Telefon || 'brak'}</p>
+                            <button class="btn-book">Zobacz szczegóły</button>
+                        </div>
+                    `;
+                    
+                    // Kliknięcie w kartę centruje mapę na schronisku
+                    card.onclick = () => {
+                        map.flyTo([item.lat, item.lon], 14);
+                        marker.openPopup();
+                    };
+                    
+                    listingElement.appendChild(card);
+                }
+            });
+
+        } catch (e) {
+            console.error("Błąd ładowania danych", e);
+        }
+    }
+
+    loadSchroniska();
+
+    // Fix dla resize: Mapa musi wiedzieć, że jej kontener zmienił rozmiar
+    const resizeObserver = new ResizeObserver(() => {
+        map.invalidateSize();
+    });
+    resizeObserver.observe(document.querySelector('.map-wrapper'));
+
+</script>
+
+</body>
+</html>
