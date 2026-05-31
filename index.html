@@ -1,195 +1,522 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <title>Schroniska.pl - Rezerwacja miejsc</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        :root {
-            --primary: #003580; /* Klasyczny kolor bookingowy */
-            --accent: #febb02;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Summit Haven — Schroniska Górskie</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --moss:#2d4a2d;--moss2:#3a5c3a;--fern:#4a7c59;--sage:#7aab82;
+  --mint:#b8d8be;--cream:#f5f0e8;--cream2:#ede5d5;--bark:#6b4f35;
+  --leaf:#a8c5a0;--dew:rgba(184,216,190,0.18);
+  --shadow:0 4px 24px rgba(30,50,30,0.13);
+  --shadow-lg:0 12px 48px rgba(30,50,30,0.18);
+  --r:10px;--r-lg:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--moss);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%234a7c59' stroke-width='0.4' opacity='0.07'%3E%3Cpath d='M0 40 Q20 20 40 40 Q60 60 80 40'/%3E%3Cpath d='M0 20 Q20 0 40 20 Q60 40 80 20'/%3E%3Cpath d='M0 60 Q20 40 40 60 Q60 80 80 60'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:80px 80px;}
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f5f5f5; }
+/* HEADER */
+header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(245,240,232,0.93);backdrop-filter:blur(16px);border-bottom:1.5px solid rgba(74,124,89,0.13);box-shadow:0 2px 16px rgba(45,74,45,0.07);}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.logo-mark{width:42px;height:42px;background:linear-gradient(145deg,var(--moss),var(--fern));border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(45,74,45,0.25);}
+.logo-mark svg{width:24px;height:24px;}
+.logo-wordmark{display:flex;flex-direction:column;line-height:1.1;}
+.logo-wordmark .brand{font-family:'Lora',serif;font-size:1.25rem;font-weight:700;color:var(--moss);}
+.logo-wordmark .sub{font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--fern);font-weight:600;}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.nav-btn{border:1.5px solid rgba(74,124,89,0.22);background:transparent;color:var(--moss2);padding:8px 18px;border-radius:999px;cursor:pointer;font-family:'Nunito';font-size:0.82rem;font-weight:700;letter-spacing:0.04em;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.nav-btn:hover{background:var(--dew);border-color:var(--fern);color:var(--fern);}
+.nav-btn.primary{background:var(--moss);border-color:var(--moss);color:var(--cream);}
+.nav-btn.primary:hover{background:var(--moss2);}
+.user-chip{display:flex;align-items:center;gap:8px;padding:5px 14px 5px 6px;background:var(--dew);border:1.5px solid rgba(74,124,89,0.2);border-radius:999px;cursor:pointer;transition:all 0.2s;}
+.user-chip:hover{background:rgba(74,124,89,0.12);}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--fern),var(--moss));display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;color:var(--cream);}
+.user-label{font-size:0.82rem;font-weight:700;color:var(--moss);}
 
-        /* Pasek nawigacji */
-        header {
-            background-color: var(--primary);
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+/* HERO */
+.hero{position:relative;z-index:1;padding:64px 48px 44px;max-width:1640px;margin:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap;}
+.hero-left{max-width:680px;}
+.hero-pill{display:inline-flex;align-items:center;gap:7px;background:rgba(74,124,89,0.1);border:1px solid rgba(74,124,89,0.2);border-radius:999px;padding:5px 14px;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--fern);font-weight:700;margin-bottom:20px;}
+.hero h2{font-family:'Lora',serif;font-size:clamp(2.4rem,5vw,4rem);line-height:1.1;color:var(--moss);margin-bottom:14px;}
+.hero h2 em{font-style:italic;color:var(--fern);}
+.hero-desc{color:var(--fern);font-size:0.95rem;line-height:1.75;max-width:480px;opacity:0.8;}
+.hero-stats{display:flex;gap:32px;flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat-num{font-family:'Lora',serif;font-size:2rem;font-weight:700;color:var(--moss);line-height:1;}
+.stat-label{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--fern);opacity:0.7;margin-top:4px;}
 
-        /* Kontener główny */
-        .main-container {
-            display: flex;
-            padding: 20px;
-            gap: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+/* GEO PROGRESS BAR */
+.geo-bar{position:fixed;bottom:0;left:0;right:0;z-index:800;background:var(--moss);color:var(--cream);padding:10px 24px;font-size:0.78rem;font-weight:700;display:flex;align-items:center;gap:16px;transform:translateY(100%);transition:transform 0.3s;}
+.geo-bar.visible{transform:translateY(0);}
+.geo-progress{flex:1;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;overflow:hidden;}
+.geo-progress-fill{height:100%;background:var(--mint);border-radius:2px;transition:width 0.4s;}
 
-        /* Lista schronisk (lewa strona) */
-        .listing-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+/* SEARCH */
+.search-bar{position:relative;z-index:1;max-width:1640px;margin:0 auto;padding:0 48px 24px;display:flex;gap:10px;flex-wrap:wrap;}
+.search-wrap{flex:1;min-width:240px;position:relative;}
+.search-wrap svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);opacity:0.35;pointer-events:none;}
+#searchInput{width:100%;padding:13px 16px 13px 46px;background:white;border:1.5px solid rgba(74,124,89,0.18);border-radius:var(--r);font-family:'Nunito';font-size:0.9rem;color:var(--moss);outline:none;transition:all 0.2s;box-shadow:var(--shadow);}
+#searchInput:focus{border-color:var(--fern);box-shadow:0 0 0 3px rgba(74,124,89,0.1),var(--shadow);}
+#searchInput::placeholder{color:rgba(74,124,89,0.4);}
+.filter-sel{padding:13px 16px;background:white;border:1.5px solid rgba(74,124,89,0.18);border-radius:var(--r);font-family:'Nunito';font-size:0.85rem;color:var(--moss);outline:none;cursor:pointer;box-shadow:var(--shadow);transition:border-color 0.2s;}
 
-        .card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            gap: 15px;
-            transition: transform 0.2s;
-        }
+/* TABS */
+.tabs{display:flex;max-width:1640px;margin:0 auto;padding:0 48px;border-bottom:1.5px solid rgba(74,124,89,0.13);position:relative;z-index:1;}
+.tab-btn{background:none;border:none;color:rgba(45,74,45,0.45);font-family:'Nunito';font-size:0.85rem;font-weight:700;letter-spacing:0.04em;padding:13px 22px;cursor:pointer;position:relative;transition:color 0.2s;}
+.tab-btn.active{color:var(--moss);}
+.tab-btn.active::after{content:'';position:absolute;bottom:-1.5px;left:0;right:0;height:2.5px;background:var(--fern);border-radius:2px;}
+.tab-pill{display:inline-flex;align-items:center;justify-content:center;background:rgba(74,124,89,0.1);color:var(--fern);border-radius:999px;min-width:20px;height:20px;padding:0 6px;font-size:0.68rem;font-weight:800;margin-left:6px;}
 
-        .card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+/* MAIN */
+.main-container{position:relative;z-index:1;max-width:1640px;margin:0 auto;padding:28px 48px 80px;display:grid;grid-template-columns:1fr 500px;gap:28px;}
+.listing-section{display:flex;flex-direction:column;gap:18px;}
 
-        .card-info h3 { margin: 0 0 5px 0; color: var(--primary); }
+/* CARD */
+.card{background:white;border-radius:var(--r-lg);border:1.5px solid rgba(74,124,89,0.1);overflow:hidden;display:grid;grid-template-columns:260px 1fr;box-shadow:var(--shadow);transition:transform 0.22s,box-shadow 0.22s,border-color 0.22s;}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.card.highlighted{border-color:var(--fern);box-shadow:0 0 0 3px rgba(74,124,89,0.18),var(--shadow-lg);}
+.card-img-wrap{position:relative;overflow:hidden;height:100%;min-height:210px;}
+.card-img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease;}
+.card:hover .card-img{transform:scale(1.05);}
+.img-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(30,55,30,0.55),rgba(30,55,30,0.05) 60%);}
+.card-badge{position:absolute;bottom:12px;left:12px;background:rgba(245,240,232,0.92);color:var(--moss);font-size:0.65rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border-radius:999px;}
+.fav-btn{position:absolute;top:11px;right:11px;width:32px;height:32px;border-radius:50%;background:rgba(245,240,232,0.88);border:none;cursor:pointer;font-size:0.95rem;z-index:2;transition:transform 0.15s;}
+.fav-btn:hover{transform:scale(1.15);}
+.card-body{padding:20px 22px;display:flex;flex-direction:column;}
+.card-name{font-family:'Lora',serif;font-size:1.2rem;font-weight:700;color:var(--moss);line-height:1.25;margin-bottom:8px;}
+.card-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.meta-tag{display:flex;align-items:center;gap:4px;font-size:0.75rem;color:var(--fern);font-weight:600;}
+.card-divider{height:1px;background:rgba(74,124,89,0.08);margin:8px 0;}
+.card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto;padding-top:10px;}
+.btn{border:none;cursor:pointer;font-family:'Nunito';font-weight:700;font-size:0.76rem;letter-spacing:0.03em;padding:8px 14px;border-radius:8px;transition:all 0.18s;white-space:nowrap;}
+.btn-green{background:var(--moss);color:var(--cream);}
+.btn-green:hover{background:var(--moss2);}
+.btn-outline{background:transparent;border:1.5px solid rgba(74,124,89,0.22);color:var(--fern);}
+.btn-outline:hover{background:var(--dew);border-color:var(--fern);}
+.btn-route{background:linear-gradient(135deg,var(--fern),var(--moss));color:var(--cream);}
+.btn-route:hover{opacity:0.88;}
+.btn-danger{background:#c0392b;color:white;}
+.btn-danger:hover{background:#a93226;}
+.btn-route-active{background:#e67e22;color:white;}
+.btn-route-active:hover{background:#d35400;}
+.no-coords{display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;color:rgba(74,124,89,0.45);font-style:italic;}
 
-        /* Kontener MAPY (prawa strona) */
-        .map-wrapper {
-            position: sticky;
-            top: 20px;
-            border: 4px solid var(--accent);
-            border-radius: 12px;
-            overflow: hidden;
-            background: white;
-            
-            /* Startowe ograniczenie wymiarów */
-            width: 450px; 
-            height: 400px;
-            
-            /* Możliwość rozszerzania przez użytkownika */
-            resize: both; 
-        }
+/* SIDEBAR */
+.sidebar{position:sticky;top:88px;height:calc(100vh - 108px);display:flex;flex-direction:column;gap:14px;}
+.map-shell{flex:1;border-radius:var(--r-lg);overflow:hidden;border:1.5px solid rgba(74,124,89,0.15);box-shadow:var(--shadow-lg);position:relative;}
+.map-top-label{position:absolute;top:13px;left:13px;z-index:999;background:rgba(245,240,232,0.92);border-radius:999px;padding:6px 14px;font-size:0.69rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--moss);font-weight:800;}
+#map{width:100%;height:100%;}
 
-        #map {
-            width: 100%;
-            height: 100%;
-        }
+/* ROUTE SIDEBAR PANEL */
+.route-panel{background:white;border-radius:var(--r-lg);border:1.5px solid rgba(74,124,89,0.15);box-shadow:var(--shadow);padding:14px 16px;display:none;max-height:220px;overflow-y:auto;}
+.route-panel.visible{display:block;}
+.route-title{font-family:'Lora',serif;font-size:0.95rem;font-weight:700;color:var(--moss);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.route-stop{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid rgba(74,124,89,0.07);}
+.route-stop:last-child{border-bottom:none;}
+.stop-num{width:20px;height:20px;background:var(--moss);color:var(--cream);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:800;flex-shrink:0;}
+.stop-name{font-size:0.78rem;font-weight:600;color:var(--moss);flex:1;line-height:1.3;}
+.stop-remove{background:none;border:none;cursor:pointer;color:#c0392b;font-size:0.75rem;padding:2px 5px;border-radius:4px;}
 
-        .btn-book {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+/* TOAST */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--moss);color:var(--cream);padding:11px 22px;border-radius:999px;font-size:0.8rem;font-weight:700;z-index:9999;transition:transform 0.35s cubic-bezier(.34,1.56,.64,1),opacity 0.35s;opacity:0;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 
-        @media (max-width: 900px) {
-            .main-container { flex-direction: column-reverse; }
-            .map-wrapper { width: 100%; height: 300px; position: static; }
-        }
-    </style>
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;z-index:2000;background:rgba(15,30,15,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--cream);border-radius:20px;width:100%;max-width:480px;box-shadow:0 24px 80px rgba(10,30,10,0.3);border:1.5px solid rgba(74,124,89,0.15);transform:scale(0.94) translateY(16px);transition:transform 0.28s cubic-bezier(.34,1.2,.64,1);max-height:90vh;overflow-y:auto;}
+.modal-overlay.open .modal{transform:scale(1) translateY(0);}
+.modal-header{padding:24px 26px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--cream);z-index:1;border-bottom:1px solid rgba(74,124,89,0.08);}
+.modal-title{font-family:'Lora',serif;font-size:1.35rem;font-weight:700;color:var(--moss);line-height:1.2;}
+.modal-close{background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--fern);opacity:0.6;transition:opacity 0.15s;line-height:1;padding:4px;}
+.modal-close:hover{opacity:1;}
+.modal-body{padding:18px 26px 26px;}
+
+/* LOGIN MODAL */
+.auth-tabs{display:flex;margin-bottom:20px;background:rgba(74,124,89,0.06);border-radius:10px;padding:4px;}
+.auth-tab{flex:1;padding:8px;border:none;background:none;cursor:pointer;font-family:'Nunito';font-size:0.82rem;font-weight:700;color:rgba(45,74,45,0.5);border-radius:8px;transition:all 0.2s;}
+.auth-tab.active{background:white;color:var(--moss);box-shadow:0 2px 8px rgba(45,74,45,0.1);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fern);margin-bottom:5px;}
+.field input{width:100%;padding:10px 13px;background:white;border:1.5px solid rgba(74,124,89,0.18);border-radius:var(--r);font-family:'Nunito';font-size:0.88rem;color:var(--moss);outline:none;transition:border-color 0.2s;}
+.field input:focus{border-color:var(--fern);}
+.btn-full{width:100%;padding:12px;font-size:0.88rem;border-radius:10px;margin-top:4px;}
+.social-btns{display:flex;gap:8px;margin-top:12px;}
+.social-btn{flex:1;padding:9px;background:white;border:1.5px solid rgba(74,124,89,0.18);border-radius:8px;cursor:pointer;font-family:'Nunito';font-size:0.73rem;font-weight:700;color:var(--moss);transition:all 0.18s;}
+.social-btn:hover{background:var(--dew);border-color:var(--fern);}
+.auth-divider{text-align:center;font-size:0.72rem;color:var(--fern);opacity:0.5;margin:14px 0 4px;}
+
+/* DETAILS MODAL */
+.dmodal{max-width:660px;}
+.dmodal-img{width:100%;height:200px;object-fit:cover;border-radius:12px;margin-bottom:16px;}
+.chips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;margin-bottom:14px;}
+.chip{background:white;border:1px solid rgba(74,124,89,0.12);border-radius:10px;padding:11px 13px;}
+.chip-label{font-size:0.63rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--fern);margin-bottom:4px;font-weight:700;}
+.chip-val{font-size:0.82rem;color:var(--moss);font-weight:600;line-height:1.3;}
+.dmodal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid rgba(74,124,89,0.08);}
+
+/* ROUTE MODAL */
+.rmodal{max-width:700px;}
+#routeMap{width:100%;height:280px;border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.rmodal-stop{display:flex;align-items:center;gap:10px;background:white;border:1.5px solid rgba(74,124,89,0.1);border-radius:10px;padding:9px 13px;margin-bottom:6px;}
+.rmodal-num{width:24px;height:24px;background:var(--fern);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:800;flex-shrink:0;}
+.rmodal-info{flex:1;}
+.rmodal-name{font-size:0.85rem;font-weight:700;color:var(--moss);}
+.rmodal-meta{font-size:0.7rem;color:var(--fern);opacity:0.7;margin-top:1px;}
+.rmodal-rm{background:none;border:none;cursor:pointer;color:#c0392b;font-size:0.95rem;padding:4px 7px;border-radius:5px;}
+.rmodal-empty{text-align:center;padding:28px;color:var(--fern);opacity:0.45;font-size:0.85rem;}
+.route-info-box{background:rgba(74,124,89,0.06);border-radius:10px;padding:11px 14px;font-size:0.78rem;color:var(--fern);line-height:1.6;margin-bottom:12px;}
+.rmodal-stops{max-height:200px;overflow-y:auto;margin-bottom:12px;}
+.rmodal-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+@media(max-width:1200px){.main-container{grid-template-columns:1fr;}.sidebar{position:relative;top:auto;height:460px;}}
+@media(max-width:720px){.card{grid-template-columns:1fr;}.card-img-wrap{height:190px;}header{padding:0 16px;}.hero{padding:36px 16px 24px;}.search-bar,.tabs,.main-container{padding-left:16px;padding-right:16px;}}
+</style>
 </head>
 <body>
 
 <header>
-    <h1>Schroniska.pl</h1>
-    <div>Logowanie | Utwórz konto</div>
+  <a class="logo" href="#">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 19L8 10L12 15L16 8L21 19" stroke="#f5f0e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="logo-wordmark">
+      <span class="brand">Summit Haven</span>
+      <span class="sub">schroniska · noclegi · trasy</span>
+    </div>
+  </a>
+  <div class="nav-right">
+    <!-- ↓ CHANGED: now opens the planner in a new tab -->
+    <a class="nav-btn" href="planer-trasy.html" target="_blank" id="btnPlanRoute">🗺 Planuj trasę</a>
+    <button class="nav-btn primary" id="btnLogin">Zaloguj się</button>
+    <div class="user-chip" id="userChip" style="display:none" onclick="logoutPrompt()">
+      <div class="user-avatar" id="uAvatar"></div>
+      <span class="user-label" id="uName"></span>
+    </div>
+  </div>
 </header>
 
-<div class="main-container">
-    <!-- Lista schronisk -->
-    <section class="listing-section" id="listing">
-        <div class="card">
-            <div class="card-info">
-                <h3>Ładowanie obiektów...</h3>
-                <p>Wybierz schronisko z mapy lub listy.</p>
-            </div>
-        </div>
-    </section>
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-pill">🌿 Odkryj polskie góry</div>
+    <h2>Twoje miejsce<br>w <em>dziczy</em></h2>
+    <p class="hero-desc">Przeglądaj schroniska, zapisuj ulubione i planuj trasy.</p>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num" id="heroCount">0</div><div class="stat-label">Schronisk</div></div>
+    <div class="stat"><div class="stat-num" id="favCount">0</div><div class="stat-label">Ulubionych</div></div>
+    <div class="stat"><div class="stat-num" id="routeCount">0</div><div class="stat-label">W trasie</div></div>
+  </div>
+</section>
 
-    <!-- Mapa w okienku -->
-    <div class="map-wrapper">
-        <div id="map"></div>
+<div class="search-bar">
+  <div class="search-wrap">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" id="searchInput" placeholder="Szukaj schroniska, lokalizacji, pasma...">
+  </div>
+  <select class="filter-sel" id="pasmSel"><option value="">Wszystkie pasma</option></select>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('all',this)">Wszystkie <span class="tab-pill" id="cAll">0</span></button>
+  <button class="tab-btn" onclick="switchTab('fav',this)">❤️ Ulubione <span class="tab-pill" id="cFav">0</span></button>
+  <button class="tab-btn" onclick="switchTab('route',this)">🗺 Trasa <span class="tab-pill" id="cRoute">0</span></button>
+</div>
+
+<div class="main-container">
+  <div class="listing-section" id="listing"></div>
+  <div class="sidebar">
+    <div class="map-shell">
+      <div class="map-top-label">📍 Mapa schronisk</div>
+      <div id="map"></div>
     </div>
+    <div class="route-panel" id="routePanel">
+      <div class="route-title">🗺 Trasa
+        <button class="btn btn-danger" style="font-size:0.68rem;padding:3px 9px;border-radius:6px;" onclick="clearRoute()">Wyczyść</button>
+      </div>
+      <div id="routeSidebarStops"></div>
+      <button class="btn btn-route" style="width:100%;margin-top:10px;" onclick="openModal('routeModal');renderRouteModal()">📐 Otwórz planistę</button>
+    </div>
+  </div>
+</div>
+
+<!-- geocode bar -->
+<div class="geo-bar" id="geoBar">
+  <span id="geoMsg">⛰ Wyszukuję współrzędne...</span>
+  <div class="geo-progress"><div class="geo-progress-fill" id="geoFill" style="width:0%"></div></div>
+  <span id="geoPct">0%</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="loginTitle">Witaj z powrotem</span>
+      <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchAuth('login')">Logowanie</button>
+        <button class="auth-tab" id="tabReg" onclick="switchAuth('register')">Rejestracja</button>
+      </div>
+      <div id="formLogin">
+        <div class="field"><label>E-mail</label><input type="email" id="lEmail" placeholder="twoj@email.pl"></div>
+        <div class="field"><label>Hasło</label><input type="password" id="lPass" placeholder="••••••••"></div>
+        <button class="btn btn-green btn-full" onclick="doLogin()">Zaloguj się 🌿</button>
+      </div>
+      <div id="formReg" style="display:none">
+        <div class="field"><label>Imię i nazwisko</label><input type="text" id="rName" placeholder="Jan Kowalski"></div>
+        <div class="field"><label>E-mail</label><input type="email" id="rEmail" placeholder="twoj@email.pl"></div>
+        <div class="field"><label>Hasło (min. 6 znaków)</label><input type="password" id="rPass" placeholder="••••••••"></div>
+        <button class="btn btn-green btn-full" onclick="doRegister()">Załóż konto 🌿</button>
+      </div>
+      <div class="auth-divider">lub kontynuuj przez</div>
+      <div class="social-btns">
+        <button class="social-btn" onclick="mockSocial('Google')">🔵 Google</button>
+        <button class="social-btn" onclick="mockSocial('Facebook')">🔷 Facebook</button>
+        <button class="social-btn" onclick="mockSocial('Apple')">🍎 Apple</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal dmodal">
+    <div class="modal-header">
+      <span class="modal-title" id="dmName">Szczegóły</span>
+      <button class="modal-close" onclick="closeModal('detailsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <img id="dmImg" class="dmodal-img" src="" alt=""
+           onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=900&auto=format&fit=crop'">
+      <div class="chips-grid" id="dmChips"></div>
+      <div class="dmodal-actions" id="dmActions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ROUTE MODAL -->
+<div class="modal-overlay" id="routeModal">
+  <div class="modal rmodal">
+    <div class="modal-header">
+      <span class="modal-title">🗺 Planer Trasy</span>
+      <button class="modal-close" onclick="closeModal('routeModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="routeMap"></div>
+      <div class="route-info-box" id="routeInfoBox">Dodaj schroniska do trasy klikając <strong>„+ Trasa"</strong> przy karcie schroniska.</div>
+      <div class="rmodal-stops" id="rmodalStops"></div>
+      <div id="rmodalEmpty" class="rmodal-empty" style="display:none">Trasa jest pusta. Zamknij i dodaj schroniska!</div>
+      <div class="rmodal-actions">
+        <button class="btn btn-route" onclick="openInOSM()">🌍 Nawiguj (OSM)</button>
+        <button class="btn btn-outline" onclick="copyRoute()">📋 Kopiuj trasę</button>
+        <button class="btn btn-danger" onclick="clearRoute();renderRouteModal()">🗑 Wyczyść</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <script>
-    // Inicjalizacja Mapy
-    const map = L.map('map').setView([49.5, 20.0], 8);
+const BAKED_GEO = {"Schroniska PTTK Kremenaros": {"lat": 49.0853, "lon": 22.5372}, "Bacówka PTTK Pod Honem": {"lat": 49.1927, "lon": 22.3427}, "Schronisko PTTK Jaworzec": {"lat": 49.1723, "lon": 22.2687}, "Bacówka PTTK Pod Małą Rawką": {"lat": 49.1347, "lon": 22.4073}, "Schronisko PTTK w Komańczy": {"lat": 49.348, "lon": 22.0513}, "Schronisko nad Smolnikiem": {"lat": 49.1608, "lon": 22.5273}, "Schronisko Pod Wysoką Połoniną": {"lat": 49.1245, "lon": 22.3856}, "Schronisko PTTK Trzy Korony": {"lat": 49.4173, "lon": 20.3943}, "Schronisko Orlica w Szczawnicy": {"lat": 49.4262, "lon": 20.4842}, "Schronisko pod Durbaszką": {"lat": 49.3853, "lon": 20.6124}, "Bacówka PTTK pod Bereśnikiem": {"lat": 49.5273, "lon": 20.7634}, "Schronisko Hajstra w Hucie Polańskiej": {"lat": 49.5438, "lon": 21.3572}, "Bacówka PTTK w Bartnem": {"lat": 49.5728, "lon": 21.2643}, "Chata Górska Cyrla": {"lat": 49.4462, "lon": 20.7918}, "Bacówka PTTK nad Wierchomlą": {"lat": 49.4583, "lon": 20.7384}, "Schronisko PTTK na Jaworzynie Krynickiej": {"lat": 49.3763, "lon": 20.9623}, "Schronisko PTTK na Przehybie": {"lat": 49.5017, "lon": 20.8932}, "Bacówka na Obidzy": {"lat": 49.5021, "lon": 20.6783}, "Schronisko PTTK Bacówka na Maciejowej": {"lat": 49.6194, "lon": 19.9783}, "Schronisko PTTK na Kudlaczach": {"lat": 49.6378, "lon": 19.8923}, "Schronisko Koliba na Łapsowej Polanie": {"lat": 49.5863, "lon": 19.8452}, "Schronisko PTTK na Luboniu Wielkim": {"lat": 49.7234, "lon": 19.9012}, "Schronisko PTTK na Starych Wierchach": {"lat": 49.6523, "lon": 20.0234}, "Schronisko PTTK na Turbaczu": {"lat": 49.5518, "lon": 20.1128}, "Bacówka PTTK na Krawcowym Wierchu": {"lat": 49.6712, "lon": 19.7623}, "Bacówka PTTK na Rycerzowej": {"lat": 49.5883, "lon": 19.0923}, "Schronisko PTTK na Hali Boraczej": {"lat": 49.6423, "lon": 18.9752}, "Schronisko PTTK na Hali Lipowskiej": {"lat": 49.6012, "lon": 19.0483}, "Schronisko PTTK na Hali Miziowej": {"lat": 49.6234, "lon": 19.1234}, "Schronisko PTTK na Hali Krupowej": {"lat": 49.6578, "lon": 19.1923}, "Schronisko PTTK na Hali Rysiance": {"lat": 49.6723, "lon": 18.8923}, "Schronisko PTTK na Markowych Szczawinach": {"lat": 49.7012, "lon": 19.0234}, "Schronisko PTTK na Przełęczy Przegibek": {"lat": 49.5928, "lon": 19.1473}, "Schronisko PTTK na Wielkiej Raczy": {"lat": 49.5578, "lon": 18.8712}, "Schronisko PTTK \"Pod Kopą Biskupią\"": {"lat": 50.8234, "lon": 15.6823}, "Schronisko PTTK Murowaniec": {"lat": 49.2363, "lon": 19.9872}, "Hotel Górski PTTK Kalatówki": {"lat": 49.2723, "lon": 19.9423}, "Schronisko PTTK na Hali Kondratowej": {"lat": 49.2234, "lon": 19.9512}, "Schronisko PTTK na Hali Ornak": {"lat": 49.2578, "lon": 19.8923}, "Schronisko PTTK w Dolinie Pięciu Stawów Polskich": {"lat": 49.1923, "lon": 20.0712}, "Schronisko PTTK nad Morskim Okiem": {"lat": 49.2012, "lon": 20.0723}, "Schronisko PTTK w Dolinie Roztoki": {"lat": 49.2134, "lon": 20.0512}, "Schronisko GK ZHP Głodówka": {"lat": 49.3012, "lon": 19.9572}, "Schronisko PTTK na Polanie Chochołowskiej": {"lat": 49.2912, "lon": 19.8423}, "Schronisko PTTK Leskowiec": {"lat": 49.7823, "lon": 19.3623}, "Schronisko PTTK na Magurce Wilkowickiej": {"lat": 49.8112, "lon": 19.0923}, "Chatka na Rogaczu": {"lat": 50.3923, "lon": 16.8423}, "Schronisko na \"Iglicznej\"": {"lat": 50.4512, "lon": 16.5923}, "Schronisko PTTK \"Na Śnieżniku\"": {"lat": 50.2023, "lon": 16.8473}, "Schronisko PTTK na Klimczoku": {"lat": 49.8623, "lon": 18.9823}, "Schronisko PTTK na Przysłopie pod Baranią Górą": {"lat": 49.7012, "lon": 18.9923}, "Schronisko PTTK na Równicy": {"lat": 49.7323, "lon": 18.8823}, "Schronisko PTTK na Skrzycznem": {"lat": 49.7512, "lon": 19.0123}, "Schronisko PTTK na Stożku": {"lat": 49.6823, "lon": 18.7723}, "Schronisko PTTK na Szyndzielni": {"lat": 49.8223, "lon": 18.9723}, "Schronisko PTTK na Błatniej": {"lat": 49.8512, "lon": 18.8923}, "Schronisko \"Chata Wuja Toma\" na przełęczy Karkoszczonka": {"lat": 49.6612, "lon": 18.8023}, "Schronisko na Koziej Górze": {"lat": 49.8023, "lon": 18.8423}, "Schronisko na Dębowcu": {"lat": 49.7723, "lon": 18.9223}, "Schronisko na Soszowie Wielkim": {"lat": 49.6423, "lon": 18.7523}, "Schronisko \"Telesforówka\" na Trzech Kopcach Wiślańskich": {"lat": 49.6823, "lon": 18.8223}, "Schronisko \"Orzeł\"": {"lat": 49.8112, "lon": 18.8623}, "Schronisko PTTK \"Zygmuntówka\" pod Przełęczą Jugowską": {"lat": 50.5923, "lon": 16.4823}, "Bacówka na Jamnej": {"lat": 49.7312, "lon": 18.7923}, "Chatka Włóczykija": {"lat": 50.7823, "lon": 15.7923}, "Schronisko Dobrych Myśli": {"lat": 50.7612, "lon": 15.8123}, "Schronisko PTTK \"Perła Zachodu\"": {"lat": 50.8723, "lon": 15.6423}, "Dom Turysty PTTK na Ślęży": {"lat": 50.8623, "lon": 16.7023}, "Dom Turysty PTTK pod Wieżycą": {"lat": 50.8523, "lon": 16.6823}, "Schronisko PTTK \"Orlica\" w Zieleńcu": {"lat": 50.3723, "lon": 16.6323}, "Schronisko PTTK \"Na Szczelińcu\"": {"lat": 50.4823, "lon": 16.3423}, "Schronisko PTTK \"Pasterka\"": {"lat": 50.5023, "lon": 16.3123}, "Schronisko PTTK na Zamku Grodno": {"lat": 50.6523, "lon": 16.5423}, "Schronisko PTTK \"Jagodna\" na Przełęczy Spalonej": {"lat": 50.5123, "lon": 16.6623}, "Schronisko PTTK \"Pod Muflonem\"": {"lat": 50.7123, "lon": 15.6323}, "Schronisko PTTK \"Andrzejówka\" na Przełęczy Trzech Dolin": {"lat": 50.7523, "lon": 15.8423}, "Schronisko PTTK \"Szwajcarka\" pod Krzyżną Górą": {"lat": 50.7923, "lon": 15.5923}, "Schronisko PTTK na Stogu Izerskim": {"lat": 50.8923, "lon": 15.4623}, "Schronisko Turystyczne \"Chatka Górzystów\"": {"lat": 50.7323, "lon": 15.7723}, "\"Schronisko Turystyczne \"Orle\"": {"lat": 50.8123, "lon": 15.6923}, "Schronisko na Hali Szrenickiej": {"lat": 50.8312, "lon": 15.5423}, "Schronisko na Szrenicy": {"lat": 50.8223, "lon": 15.5323}, "Schronisko \"Kamieńczyk\"": {"lat": 50.8623, "lon": 15.5123}, "Schronisko PTTK \"Kochanówka\"": {"lat": 50.7823, "lon": 15.6623}, "Schronisko PTTK \"Odrodzenie\" na Przełęczy Karkonoskiej": {"lat": 50.7723, "lon": 15.7423}, "Schronisko PTTK \"Pod Łabskim Szczytem\"": {"lat": 50.7923, "lon": 15.6123}, "Schronisko PTTK \"Samotnia\"": {"lat": 50.7623, "lon": 15.6823}, "Schronisko PTTK \"Srebrny Potok\" w Dolinie Srebrnika": {"lat": 50.7523, "lon": 15.7023}, "Schronisko PTTK \"Strzecha Akademicka\"": {"lat": 50.7423, "lon": 15.7223}, "Schronisko Górskie \"Dom Śląski\"": {"lat": 50.7323, "lon": 15.7423}, "Schronisko PTTK na Przełęczy Okraj": {"lat": 50.7823, "lon": 15.9423}};
 
-    const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenTopoMap'
-    }).addTo(map);
+const COL = {
+  name:'Nazwa schroniska',range:'Pasmo górskie',alt:'Wysokość n.p.m. !',email:'E-mail !',phone:'Telefon !',
+  loc:'Lokalizacja ',season:'Terminy otwarcia !',places:'Liczba dostępnych miejsc ! ',floor:'Czy można spać na ziemi? !',
+  room1:'Pokoje jednoosobowe !',room2:'Pokoje 2-osobowe',room3:'Pokoje 3-osobowe',room4:'Pokoje 4-osobowe !',
+  roomX:'Pokoje wieloosobowe',price:'Ceny noclegu !',bedding:'Pościel czy śpiwór',food:'Wyżywienie',
+  rating:'Ocena gości ',pets:'Czy można nocować zwierzę ',photo:'Zdjęcie',
+};
 
-    const trails = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png').addTo(map);
+let allData=[],geoCache={},favourites=new Set(),routeList=[],currentUser=null,currentTab='all',mapMarkers={},routeMapObj=null;
+try{geoCache=JSON.parse(localStorage.getItem('sh_geo')||'{}');}catch(e){}
+for(const[k,v]of Object.entries(BAKED_GEO)){if(!geoCache[k])geoCache[k]=v;}
+try{favourites=new Set(JSON.parse(localStorage.getItem('sh_favs')||'[]'));}catch(e){}
+try{routeList=JSON.parse(localStorage.getItem('sh_route')||'[]');}catch(e){}
+try{currentUser=JSON.parse(localStorage.getItem('sh_user')||'null');}catch(e){}
 
-    // Funkcja do wczytywania danych
-    async function loadSchroniska() {
-        try {
-            const response = await fetch('schroniska.xlsx');
-            const arrayBuffer = await response.arrayBuffer();
-            const data = new Uint8Array(arrayBuffer);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+function sv(v){if(v===null||v===undefined)return '';const s=String(v).trim();return(s===''||s==='NaN'||s==='N/A'||s==='0')?'':s;}
+function cleanNum(v){if(v===null||v===undefined)return '';const s=String(v).trim();if(s.toUpperCase()==='TAK')return '✓';const n=parseFloat(s);if(isNaN(n)||n<=0)return '';return String(Math.round(n));}
+function saveFavs(){try{localStorage.setItem('sh_favs',JSON.stringify([...favourites]));}catch(e){}}
+function saveRoute(){try{localStorage.setItem('sh_route',JSON.stringify(routeList));}catch(e){}updateCounts();}
+function saveGeo(){try{localStorage.setItem('sh_geo',JSON.stringify(geoCache));}catch(e){}}
+function saveUser(){try{localStorage.setItem('sh_user',JSON.stringify(currentUser));}catch(e){}}
+function toast(msg,dur=2400){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur);}
+function esc(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 
-            const listingElement = document.getElementById('listing');
-            listingElement.innerHTML = ""; // Czyścimy listę "ładowania"
+const FB=['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=900&auto=format&fit=crop'];
+function imgSrc(row,i){const f=sv(row[COL.photo]);if(f)return`zdjęcia/${f}`;return FB[i%FB.length];}
 
-            jsonData.forEach(item => {
-                if (item.lat && item.lon) {
-                    // 1. Dodajemy Marker na mapie
-                    const marker = L.marker([item.lat, item.lon]).addTo(map);
-                    
-                    const popupContent = `
-                        <b>${item["Nazwa schroniska"]}</b><br>
-                        Wysokość: ${item["Wysokość n.p.m."]} m<br>
-                        <button class="btn-book" onclick="alert('Przekierowanie do systemu rezerwacji...')">Zarezerwuj</button>
-                    `;
-                    marker.bindPopup(popupContent);
+const mainMap=L.map('map').setView([49.55,20.1],7);
+L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap',maxZoom:17}).addTo(mainMap);
 
-                    // 2. Dodajemy Kartę do listy obok
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <div class="card-info">
-                            <h3>${item["Nazwa schroniska"]}</h3>
-                            <p><b>Lokalizacja:</b> ${item.Lokalizacja}</p>
-                            <p><b>Pasmo:</b> ${item["Pasmo górskie"] || 'Góry'}</p>
-                            <p><b>Tel:</b> ${item.Telefon || 'brak'}</p>
-                            <button class="btn-book">Zobacz szczegóły</button>
-                        </div>
-                    `;
-                    
-                    // Kliknięcie w kartę centruje mapę na schronisku
-                    card.onclick = () => {
-                        map.flyTo([item.lat, item.lon], 14);
-                        marker.openPopup();
-                    };
-                    
-                    listingElement.appendChild(card);
-                }
-            });
+function mkIcon(inRoute){const c=inRoute?'#e67e22':'#4a7c59';const s=inRoute?14:11;return L.divIcon({className:'',html:`<div style="width:${s}px;height:${s}px;background:${c};border:2px solid rgba(245,240,232,0.9);border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,0.28);"></div>`,iconSize:[s,s],iconAnchor:[s/2,s/2]});}
+function clearMarkers(){Object.values(mapMarkers).forEach(m=>mainMap.removeLayer(m));mapMarkers={};}
+function addMarker(row,i){const name=sv(row[COL.name]);const coords=geoCache[name];if(!coords)return;const inRoute=routeList.includes(name);const m=L.marker([coords.lat,coords.lon],{icon:mkIcon(inRoute)}).addTo(mainMap).bindPopup(`<b>${name}</b><br><small style="color:#4a7c59">${sv(row[COL.range])}</small>`).on('click',()=>highlightCard(name));mapMarkers[name]=m;}
+function focusMarker(name){const m=mapMarkers[name];if(!m){toast('📍 Brak współrzędnych dla tego schroniska');return;}mainMap.setView(m.getLatLng(),14,{animate:true});m.openPopup();highlightCard(name);}
+function highlightCard(name){document.querySelectorAll('.card').forEach(c=>{const on=c.dataset.name===name;c.classList.toggle('highlighted',on);if(on)c.scrollIntoView({behavior:'smooth',block:'center'});});setTimeout(()=>document.querySelectorAll('.card.highlighted').forEach(c=>c.classList.remove('highlighted')),2500);}
 
-        } catch (e) {
-            console.error("Błąd ładowania danych", e);
-        }
-    }
+async function geocodeAll(data){
+  const uncached=data.filter(r=>!geoCache[sv(r[COL.name])]);
+  if(!uncached.length){renderCards(getFiltered(currentTab));return;}
+  const bar=document.getElementById('geoBar'),msg=document.getElementById('geoMsg'),fill=document.getElementById('geoFill'),pct=document.getElementById('geoPct');
+  bar.classList.add('visible');
+  const BATCH=30;const toProcess=uncached.slice(0,BATCH);let done=0;
+  for(const row of toProcess){
+    const name=sv(row[COL.name]);const loc=sv(row[COL.loc]).replace(/\n/g,' ').trim();const query=loc||name;
+    try{const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query+', Polska')}&format=json&limit=1&accept-language=pl`;const res=await fetch(url,{headers:{'Accept-Language':'pl'}});const json=await res.json();if(json&&json.length){geoCache[name]={lat:parseFloat(json[0].lat),lon:parseFloat(json[0].lon)};}}catch(e){}
+    done++;const p=Math.round((done/toProcess.length)*100);fill.style.width=p+'%';pct.textContent=p+'%';msg.textContent=`⛰ Geocodowanie ${done}/${toProcess.length}: ${name.substring(0,40)}...`;saveGeo();
+    if(done%5===0)renderCards(getFiltered(currentTab));
+    await new Promise(r=>setTimeout(r,1100));
+  }
+  saveGeo();bar.classList.remove('visible');renderCards(getFiltered(currentTab));
+  if(uncached.length>BATCH)toast(`📍 Wczytano ${BATCH} lokalizacji. Odśwież stronę, by geocodować więcej.`,4000);
+}
 
-    loadSchroniska();
+function updateCounts(){
+  document.getElementById('heroCount').textContent=allData.length;document.getElementById('favCount').textContent=favourites.size;document.getElementById('routeCount').textContent=routeList.length;
+  document.getElementById('cAll').textContent=getFiltered('all').length;document.getElementById('cFav').textContent=getFiltered('fav').length;document.getElementById('cRoute').textContent=getFiltered('route').length;
+  document.getElementById('routePanel').classList.toggle('visible',routeList.length>0);renderRouteSidebar();
+}
 
-    // Fix dla resize: Mapa musi wiedzieć, że jej kontener zmienił rozmiar
-    const resizeObserver = new ResizeObserver(() => {
-        map.invalidateSize();
-    });
-    resizeObserver.observe(document.querySelector('.map-wrapper'));
+function getFiltered(tab){
+  const q=document.getElementById('searchInput').value.toLowerCase();const pasm=document.getElementById('pasmSel').value;
+  return allData.filter(r=>{
+    const name=sv(r[COL.name]).toLowerCase(),loc=sv(r[COL.loc]).toLowerCase(),range=sv(r[COL.range]).toLowerCase();
+    const qOk=!q||name.includes(q)||loc.includes(q)||range.includes(q);const pOk=!pasm||sv(r[COL.range])===pasm;
+    const n=sv(r[COL.name]);let tOk=true;
+    if(tab==='fav')tOk=favourites.has(n);if(tab==='route')tOk=routeList.includes(n);
+    return qOk&&pOk&&tOk;
+  });
+}
 
+function renderCards(data){
+  const sec=document.getElementById('listing');sec.innerHTML='';clearMarkers();updateCounts();
+  if(!data.length){sec.innerHTML=`<div style="text-align:center;padding:56px;color:var(--fern);opacity:0.5;">Brak pasujących schronisk.</div>`;return;}
+  data.forEach((row,i)=>{
+    const name=sv(row[COL.name]),range=sv(row[COL.range]),alt=sv(row[COL.alt]),places=sv(row[COL.places]),rating=sv(row[COL.rating]),price=sv(row[COL.price]);
+    const isFav=favourites.has(name),inRt=routeList.includes(name);addMarker(row,i);
+    const card=document.createElement('div');card.className='card'+(inRt?' highlighted':'');card.dataset.name=name;
+    card.innerHTML=`
+      <div class="card-img-wrap">
+        <img class="card-img" src="${imgSrc(row,i)}" alt="${name}" loading="lazy" onerror="this.src='${FB[0]}'">
+        <div class="img-shade"></div>
+        ${range?`<div class="card-badge">${range}</div>`:''}
+        <button class="fav-btn" onclick="toggleFav(event,'${esc(name)}')">${isFav?'❤️':'🤍'}</button>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${name}</div>
+        <div class="card-meta">
+          ${alt?`<div class="meta-tag">⛰ ${alt}</div>`:''}
+          ${places?`<div class="meta-tag">👥 ${places} miejsc</div>`:''}
+          ${rating?`<div class="meta-tag">⭐ ${rating}</div>`:''}
+          ${price?`<div class="meta-tag">💰 ${price}</div>`:''}
+          ${inRt?`<div class="meta-tag" style="color:#e67e22">🗺 W trasie</div>`:''}
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-actions">
+          <button class="btn btn-green" onclick="showOnMap(event,'${esc(name)}')">📍 Mapa</button>
+          <button class="btn btn-outline" onclick="openDetails(event,'${esc(name)}')">Szczegóły</button>
+          <button class="btn ${inRt?'btn-route-active':'btn-route'}" onclick="toggleRoute(event,'${esc(name)}')">
+            ${inRt?'✓ W trasie':'+ Trasa'}
+          </button>
+        </div>
+      </div>`;
+    sec.appendChild(card);
+  });
+}
+
+function showOnMap(e,name){e.stopPropagation();focusMarker(name);toast(`📍 ${name}`);}
+function toggleFav(e,name){e.stopPropagation();if(favourites.has(name)){favourites.delete(name);toast(`💔 Usunięto: ${name}`);}else{favourites.add(name);toast(`❤️ Ulubione: ${name}`);}saveFavs();applyFilters();}
+function toggleRoute(e,name){e&&e.stopPropagation();const idx=routeList.indexOf(name);if(idx>=0){routeList.splice(idx,1);toast(`🗺 Usunięto z trasy: ${name}`);}else{routeList.push(name);toast(`✅ Dodano do trasy: ${name}`);}saveRoute();applyFilters();if(mapMarkers[name])mapMarkers[name].setIcon(mkIcon(routeList.includes(name)));}
+function clearRoute(){routeList.length=0;saveRoute();applyFilters();toast('🗑 Trasa wyczyszczona');}
+
+function openDetails(e,name){
+  e&&e.stopPropagation();const idx=allData.findIndex(r=>sv(r[COL.name])===name);if(idx<0)return;const row=allData[idx];
+  document.getElementById('dmName').textContent=name;document.getElementById('dmImg').src=imgSrc(row,idx);
+  const fields=[[COL.range,'🏔','Pasmo górskie'],[COL.alt,'⛰','Wysokość'],[COL.loc,'📍','Lokalizacja'],[COL.season,'📅','Otwarcie'],[COL.places,'👥','Miejsca noclegowe'],[COL.price,'💰','Ceny noclegu'],[COL.food,'🍽','Wyżywienie'],[COL.bedding,'🛏','Pościel/śpiwór'],[COL.rating,'⭐','Ocena gości'],[COL.phone,'📞','Telefon'],[COL.email,'✉️','E-mail'],[COL.pets,'🐾','Zwierzęta'],[COL.floor,'💤','Spanie na ziemi']];
+  const rooms=[];if(cleanNum(row[COL.room1]))rooms.push(`1-os: ${cleanNum(row[COL.room1])}`);if(cleanNum(row[COL.room2]))rooms.push(`2-os: ${cleanNum(row[COL.room2])}`);if(cleanNum(row[COL.room3]))rooms.push(`3-os: ${cleanNum(row[COL.room3])}`);if(cleanNum(row[COL.room4]))rooms.push(`4-os: ${cleanNum(row[COL.room4])}`);if(cleanNum(row[COL.roomX]))rooms.push(`wielos.: ${cleanNum(row[COL.roomX])}`);
+  let html=fields.map(([key,icon,label])=>{const v=sv(row[key]);if(!v)return '';return `<div class="chip"><div class="chip-label">${icon} ${label}</div><div class="chip-val">${v}</div></div>`;}).join('');
+  if(rooms.length)html+=`<div class="chip" style="grid-column:1/-1"><div class="chip-label">🏠 Pokoje</div><div class="chip-val">${rooms.join(' · ')}</div></div>`;
+  if(!html)html=`<div class="chip"><div class="chip-label">ℹ️ Info</div><div class="chip-val">Brak dodatkowych danych</div></div>`;
+  document.getElementById('dmChips').innerHTML=html;
+  const isFav=favourites.has(name),inRt=routeList.includes(name);
+  document.getElementById('dmActions').innerHTML=`
+    <button class="btn btn-green" onclick="showOnMap(event,'${esc(name)}');closeModal('detailsModal')">📍 Pokaż na mapie</button>
+    <button class="btn btn-outline" id="dmFavBtn" onclick="toggleFav(event,'${esc(name)}');refreshDmFav('${esc(name)}')">${isFav?'❤️ Ulubione':'🤍 Dodaj do ulubionych'}</button>
+    <button class="btn ${inRt?'btn-route-active':'btn-route'}" onclick="toggleRoute(event,'${esc(name)}');closeModal('detailsModal')">${inRt?'✓ W trasie':'+ Dodaj do trasy'}</button>`;
+  openModal('detailsModal');
+}
+function refreshDmFav(name){const btn=document.getElementById('dmFavBtn');if(btn)btn.textContent=favourites.has(name)?'❤️ Ulubione':'🤍 Dodaj do ulubionych';}
+
+function renderRouteModal(){
+  const stopsEl=document.getElementById('rmodalStops'),emptyEl=document.getElementById('rmodalEmpty'),infoEl=document.getElementById('routeInfoBox');
+  if(!routeList.length){stopsEl.innerHTML='';emptyEl.style.display='block';infoEl.innerHTML='Dodaj schroniska do trasy klikając <strong>„+ Trasa"</strong> przy karcie.';}
+  else{emptyEl.style.display='none';infoEl.innerHTML=`Trasa zawiera <strong>${routeList.length} ${routeList.length===1?'punkt':'punkty/punktów'}</strong>. Kliknij 🌍 Nawiguj, żeby otworzyć w OpenStreetMap.`;
+    stopsEl.innerHTML=routeList.map((name,i)=>{const row=allData.find(r=>sv(r[COL.name])===name);const range=row?sv(row[COL.range]):'';const alt=row?sv(row[COL.alt]):'';const meta=[range,alt].filter(Boolean).join(' · ');return `<div class="rmodal-stop"><div class="rmodal-num">${i+1}</div><div class="rmodal-info"><div class="rmodal-name">${name}</div>${meta?`<div class="rmodal-meta">${meta}</div>`:''}</div><button class="rmodal-rm" onclick="removeFromRoute('${esc(name)}')">✕</button></div>`;}).join('');}
+  setTimeout(()=>{if(!routeMapObj){routeMapObj=L.map('routeMap').setView([49.55,20.1],7);L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap',maxZoom:17}).addTo(routeMapObj);}routeMapObj.invalidateSize();drawRouteOnModal();},200);
+}
+function drawRouteOnModal(){
+  if(!routeMapObj)return;routeMapObj.eachLayer(l=>{if(l instanceof L.Marker||l instanceof L.Polyline)routeMapObj.removeLayer(l);});
+  const pts=routeList.map(name=>{const c=geoCache[name];return c?[c.lat,c.lon]:null;}).filter(Boolean);
+  if(!pts.length)return;
+  pts.forEach((p,i)=>{const color=i===0?'#2d4a2d':i===pts.length-1?'#c0392b':'#e67e22';L.marker(p,{icon:L.divIcon({className:'',html:`<div style="width:28px;height:28px;background:${color};border:2.5px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.66rem;font-weight:900;color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${i+1}</div>`,iconSize:[28,28],iconAnchor:[14,14]})}).addTo(routeMapObj).bindPopup(`<b>${routeList[i]}</b>`);});
+  if(pts.length>1){const poly=L.polyline(pts,{color:'#e67e22',weight:3,opacity:0.85,dashArray:'9 5'}).addTo(routeMapObj);routeMapObj.fitBounds(poly.getBounds(),{padding:[24,24]});}else{routeMapObj.setView(pts[0],13);}
+}
+function removeFromRoute(name){const idx=routeList.indexOf(name);if(idx>=0)routeList.splice(idx,1);saveRoute();applyFilters();renderRouteModal();toast(`Usunięto: ${name}`);}
+function openInOSM(){if(!routeList.length){toast('Dodaj punkty do trasy!');return;}const pts=routeList.map(n=>geoCache[n]).filter(Boolean);if(pts.length<2){toast('Potrzeba min. 2 punktów z lokalizacją!');return;}window.open('https://www.openstreetmap.org/directions?engine=graphhopper_foot&route='+pts.map(p=>`${p.lat},${p.lon}`).join(';'),'_blank');}
+function copyRoute(){if(!routeList.length){toast('Trasa jest pusta!');return;}navigator.clipboard.writeText(routeList.map((n,i)=>`${i+1}. ${n}`).join('\n')).then(()=>toast('📋 Skopiowano do schowka!'));}
+
+function renderRouteSidebar(){
+  const el=document.getElementById('routeSidebarStops');if(!routeList.length){el.innerHTML='';return;}
+  el.innerHTML=routeList.map((name,i)=>`<div class="route-stop"><div class="stop-num">${i+1}</div><div class="stop-name">${name}</div><button class="stop-remove" onclick="toggleRoute(null,'${esc(name)}')">✕</button></div>`).join('');
+}
+
+function applyFilters(){renderCards(getFiltered(currentTab));}
+document.getElementById('searchInput').addEventListener('input',applyFilters);
+document.getElementById('pasmSel').addEventListener('change',applyFilters);
+function switchTab(tab,btn){currentTab=tab;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyFilters();}
+function fillPasmSel(){const sel=document.getElementById('pasmSel');[...new Set(allData.map(r=>sv(r[COL.range])).filter(Boolean))].sort().forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;sel.appendChild(o);});}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+document.getElementById('btnLogin').addEventListener('click',()=>openModal('loginModal'));
+
+function switchAuth(mode){document.getElementById('formLogin').style.display=mode==='login'?'block':'none';document.getElementById('formReg').style.display=mode==='register'?'block':'none';document.getElementById('tabLogin').classList.toggle('active',mode==='login');document.getElementById('tabReg').classList.toggle('active',mode==='register');document.getElementById('loginTitle').textContent=mode==='login'?'Witaj z powrotem':'Utwórz konto';}
+function doLogin(){const email=document.getElementById('lEmail').value.trim(),pass=document.getElementById('lPass').value;if(!email||!pass){toast('Uzupełnij wszystkie pola!');return;}setUser({name:email.split('@')[0],email,init:email[0].toUpperCase()});closeModal('loginModal');toast(`🌿 Witaj, ${currentUser.name}!`);}
+function doRegister(){const name=document.getElementById('rName').value.trim(),email=document.getElementById('rEmail').value.trim(),pass=document.getElementById('rPass').value;if(!name||!email||!pass){toast('Uzupełnij wszystkie pola!');return;}if(pass.length<6){toast('Hasło musi mieć min. 6 znaków!');return;}setUser({name,email,init:name[0].toUpperCase()});closeModal('loginModal');toast(`🌿 Konto utworzone! Witaj, ${name}!`);}
+function mockSocial(provider){const n={Google:'Użytkownik Google',Facebook:'Użytkownik Facebook',Apple:'Użytkownik Apple'};setUser({name:n[provider],email:`user@${provider.toLowerCase()}.com`,init:provider[0]});closeModal('loginModal');toast(`🌿 Zalogowano przez ${provider}!`);}
+function setUser(u){currentUser=u;saveUser();document.getElementById('btnLogin').style.display='none';document.getElementById('userChip').style.display='flex';document.getElementById('uAvatar').textContent=u.init;document.getElementById('uName').textContent=u.name;}
+function logoutPrompt(){if(confirm(`Wylogować się? (${currentUser?.name})`)){currentUser=null;try{localStorage.removeItem('sh_user');}catch(e){}document.getElementById('btnLogin').style.display='';document.getElementById('userChip').style.display='none';toast('👋 Wylogowano');}}
+
+function boot(){
+  const tryFiles=['Schroniska_Baza.xlsx','Schroniska Baza.xlsx'];let attempted=0;
+  function tryNext(){if(attempted>=tryFiles.length){allData=DEMO;init();return;}
+    fetch(tryFiles[attempted]).then(r=>{if(!r.ok)throw new Error('not ok');return r.arrayBuffer();}).then(buf=>{const wb=XLSX.read(buf,{type:'array'});allData=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);init();}).catch(()=>{attempted++;tryNext();});}
+  tryNext();
+}
+function init(){fillPasmSel();if(currentUser)setUser(currentUser);updateCounts();renderCards(getFiltered(currentTab));geocodeAll(allData);}
+
+const DEMO=[
+  {[COL.name]:'Schronisko na Hali Ornak',[COL.range]:'Tatry',[COL.alt]:'1100 m n.p.m.',[COL.places]:'50',[COL.price]:'od 80 zł',[COL.food]:'Restauracja',[COL.rating]:'9.0/10',[COL.loc]:'Dolina Kościeliska',[COL.phone]:'+48 18 201 70 09',[COL.photo]:''},
+  {[COL.name]:'Schronisko PTTK Murowaniec',[COL.range]:'Tatry',[COL.alt]:'1500 m n.p.m.',[COL.places]:'80',[COL.price]:'od 100 zł',[COL.food]:'Restauracja',[COL.rating]:'8.8/10',[COL.loc]:'Hala Gąsienicowa',[COL.phone]:'+48 18 203 43 97',[COL.photo]:''},
+  {[COL.name]:'Schronisko na Turbaczu',[COL.range]:'Gorce',[COL.alt]:'1310 m n.p.m.',[COL.places]:'60',[COL.price]:'od 70 zł',[COL.food]:'Kuchnia',[COL.rating]:'9.2/10',[COL.loc]:'Gorce, Nowy Targ',[COL.phone]:'+48 18 262 01 15',[COL.photo]:''},
+  {[COL.name]:'Chatka Puchatka',[COL.range]:'Bieszczady',[COL.alt]:'1228 m n.p.m.',[COL.places]:'35',[COL.price]:'od 55 zł',[COL.food]:'Kuchnia',[COL.rating]:'9.5/10',[COL.loc]:'Połonina Wetlińska',[COL.phone]:'+48 601 000 111',[COL.photo]:''},
+];
+boot();
 </script>
-
 </body>
 </html>

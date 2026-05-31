@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Schroniska.pl - Zaawansowany Planer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+        --moss:#2d4a2d;--moss2:#3a5c3a;--fern:#4a7c59;--sage:#7aab82;
+        --mint:#b8d8be;--cream:#f5f0e8;--cream2:#ede5d5;
+        --dew:rgba(184,216,190,0.18);
+        --shadow:0 4px 24px rgba(30,50,30,0.13);
+
+        /* remap existing planner vars */
+        --primary: var(--moss);
+        --accent: var(--fern);
+        --text-gray: rgba(45,74,45,0.65);
+        --bg-light: var(--cream);
+        }
+        *{ box-sizing:border-box; }
+
+        body{
+        font-family:'Nunito', system-ui, -apple-system, Segoe UI, sans-serif;
+        margin:0;
+        background:var(--bg-light);
+        height:100vh;
+        display:flex;
+        flex-direction:column;
+        overflow:hidden;
+        color:var(--moss);
+        }
+
+        body::before{
+        content:'';
+        position:fixed;
+        inset:0;
+        z-index:0;
+        pointer-events:none;
+        background-image:url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%234a7c59' stroke-width='0.4' opacity='0.07'%3E%3Cpath d='M0 40 Q20 20 40 40 Q60 60 80 40'/%3E%3Cpath d='M0 20 Q20 0 40 20 Q60 40 80 20'/%3E%3Cpath d='M0 60 Q20 40 40 60 Q60 80 80 60'/%3E%3C/g%3E%3C/svg%3E");
+        background-size:80px 80px;
+        }
+
+        /* Summit Haven header */
+        .sh-header{
+        position:sticky;
+        top:0;
+        z-index:1001;
+        height:68px;
+        padding:0 28px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        background:rgba(245,240,232,0.93);
+        backdrop-filter:blur(16px);
+        border-bottom:1.5px solid rgba(74,124,89,0.13);
+        box-shadow:0 2px 16px rgba(45,74,45,0.07);
+        }
+        .sh-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+        .sh-logo-mark{
+        width:42px;height:42px;border-radius:12px;
+        background:linear-gradient(145deg,var(--moss),var(--fern));
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 3px 10px rgba(45,74,45,0.25);
+        }
+        .sh-logo-mark svg{width:24px;height:24px;}
+        .sh-logo-wordmark{display:flex;flex-direction:column;line-height:1.1;}
+        .sh-brand{font-family:'Lora',serif;font-size:1.25rem;font-weight:700;color:var(--moss);}
+        .sh-sub{font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--fern);font-weight:600;}
+        .sh-nav-right{display:flex;align-items:center;gap:10px;}
+        .sh-nav-btn{
+        border:1.5px solid rgba(74,124,89,0.22);
+        background:transparent;
+        color:var(--moss2);
+        padding:8px 18px;
+        border-radius:999px;
+        cursor:pointer;
+        font-family:'Nunito';
+        font-size:0.82rem;
+        font-weight:700;
+        letter-spacing:0.04em;
+        transition:all 0.2s;
+        }
+        .sh-nav-btn:hover{background:var(--dew);border-color:var(--fern);color:var(--fern);}
+        .sh-nav-btn.sh-primary{background:var(--moss);border-color:var(--moss);color:var(--cream);}
+        .sh-nav-btn.sh-primary:hover{background:var(--moss2);}
+
+        /* tabs bar */
+        .sh-tabs{
+        display:flex;
+        padding:0 28px;
+        border-bottom:1.5px solid rgba(74,124,89,0.13);
+        position:relative;
+        z-index:1000;
+        background:transparent;
+        }
+        .sh-tab-btn{
+        background:none;border:none;
+        color:rgba(45,74,45,0.45);
+        font-family:'Nunito';
+        font-size:0.85rem;
+        font-weight:700;
+        letter-spacing:0.04em;
+        padding:13px 22px;
+        cursor:pointer;
+        position:relative;
+        }
+        .sh-tab-btn.active{color:var(--moss);}
+        .sh-tab-btn.active::after{
+        content:'';
+        position:absolute;
+        bottom:-1.5px;
+        left:0;right:0;
+        height:2.5px;
+        background:var(--fern);
+        border-radius:2px;
+        }
+
+        /* blend planner UI into theme */
+        .main-content{ position:relative; z-index:1; }
+        .planner-sidebar{
+        background:white;
+        border-right:1.5px solid rgba(74,124,89,0.13);
+        box-shadow:var(--shadow);
+        }
+        .waypoint-item{
+        background:rgba(74,124,89,0.04);
+        border:1px solid rgba(74,124,89,0.10);
+        border-left:4px solid var(--fern);
+        }
+        .route-summary-box{
+        background:rgba(74,124,89,0.06);
+        border-top:1px solid rgba(74,124,89,0.10);
+        }
+        .time-dist{ color:var(--moss); }
+        .engine-badge{ background:rgba(45,74,45,0.85); }
+        nav button { padding: 12px 20px; border: none; background: none; font-weight: bold; cursor: pointer; color: var(--primary); border-bottom: 3px solid transparent; }
+        nav button.active { border-bottom: 3px solid var(--primary); }
+        .main-content { flex: 1; position: relative; overflow: hidden; }
+        .page-section { display: none; width: 100%; height: 100%; }
+        .page-section.active { display: flex; }
+
+        /* Planer Layout */
+        .planner-sidebar { width: 380px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; z-index: 10; }
+        .waypoints-list { padding: 20px; flex: 1; overflow-y: auto; }
+        .waypoint-item {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; margin-bottom: 10px; padding: 10px;
+            background: #f9f9f9; border-radius: 6px; border-left: 4px solid var(--primary); font-size: 0.85rem;
+        }
+        .waypoint-left { display:flex; align-items:center; gap:10px; min-width:0; }
+        .waypoint-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 230px; color:#333; }
+        .wp-remove{
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: #d32f2f;
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1;
+            padding: 2px 10px;
+            border-radius: 8px;
+        }
+        .wp-remove:hover{
+            background: rgba(211,47,47,0.10);
+            color: #b71c1c;
+        }
+
+        .route-summary-box { background: #f8f9fa; border-top: 1px solid #eee; padding: 20px; }
+        .time-dist { font-size: 1.6rem; font-weight: bold; color: var(--primary); }
+        .stat-item { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-gray); margin-bottom: 5px; border-bottom: 1px dashed #eee; padding-bottom: 2px; }
+
+        #map-planner { width: 100%; height: 100%; }
+        .loading-overlay { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 2000; background: var(--accent); padding: 5px 15px; border-radius: 20px; font-weight: bold; display: none; }
+        .engine-badge {
+            position: absolute; bottom: 30px; left: 10px; z-index: 1000;
+            background: rgba(0,53,128,0.85); color: white; font-size: 0.7rem;
+            padding: 4px 10px; border-radius: 12px; backdrop-filter: blur(4px);
+        }
+        .custom-popup .menu-item { padding: 8px 12px; cursor: pointer; transition: 0.2s; border-radius: 4px; }
+        .custom-popup .menu-item:hover { background: #eee; }
+        .error-banner { background: #fff3cd; border: 1px solid #ffc107; padding: 8px 14px; border-radius: 6px; font-size: 0.82rem; margin: 10px 20px 0; display: none; }
+
+        /* ROUTE STEPS */
+        .step-item{
+            background:#fff; border:1px solid #eee; border-radius:10px;
+            padding:10px 12px; margin:8px 10px; font-size:.86rem;
+        }
+        .step-top{ display:flex; justify-content:space-between; gap:10px; color:#444; }
+        .step-name{ margin-top:6px; color:#666; }
+        .step-badge{
+            display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:999px;
+            background:#eef4ff; color:#003580; border:1px solid #d9e6ff;
+        }
+        .step-muted{ color:#999; font-size:.78rem; }
+
+        /* ─── SEARCH (w sidebarze) ─────────────────────────────────────────── */
+        .map-search {
+            position: relative;
+            z-index: 20;
+            width: auto;
+            margin: 12px 14px 6px;
+            font-size: 14px;
+            color: #222;
+        }
+        .map-search .search-box {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #cfd7e3;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+        .map-search .search-icn {
+            width: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .map-search input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 10px 8px;
+            font-size: 14px;
+        }
+        .map-search button.clear-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            padding: 8px 10px;
+            color: #666;
+            font-size: 16px;
+        }
+        .map-search .dropdown {
+            margin-top: 6px;
+            background: #fff;
+            border: 1px solid #d7dce3;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+            overflow: hidden;
+            position: relative;
+            z-index: 50;
+        }
+        .map-search .results { max-height: 240px; overflow: auto; }
+        .map-search .result-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f2f4;
+            align-items: flex-start;
+        }
+        .map-search .result-item:hover { background: #f5f7fb; }
+        .map-search .result-item:last-child { border-bottom: none; }
+        .map-search .r-icon { width: 18px; color: #999; margin-top: 2px; }
+        .map-search .r-title { font-weight: 600; font-size: 13px; color: #2b2b2b; }
+        .map-search .r-sub { font-size: 12px; color: #8a8a8a; margin-top: 1px; }
+        .map-search .hint { padding: 10px 12px; color: #999; font-size: 12px; }
+
+        /* ─── EXTRA CONTRAST FOR ROUTE ─────────────────────────────────────── */
+        .leaflet-pane .leaflet-overlay-pane svg path {
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.35)) drop-shadow(0 0 6px rgba(255,255,255,0.45));
+        }
+    </style>
+</head>
+<body>
+
+<header class="sh-header">
+  <a class="sh-logo" href="./index.html">
+    <div class="sh-logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M3 19L8 10L12 15L16 8L21 19" stroke="#f5f0e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="sh-logo-wordmark">
+      <span class="sh-brand">Summit Haven</span>
+      <span class="sh-sub">schroniska · noclegi · trasy</span>
+    </div>
+  </a>
+
+  <div class="sh-nav-right">
+    <button class="sh-nav-btn" onclick="window.location.href='./index.html'">Noclegi</button>
+    <button class="sh-nav-btn sh-primary" onclick="clearPlanner()">Wyczyść</button>
+  </div>
+</header>
+
+<div class="sh-tabs">
+  <button class="sh-tab-btn active" onclick="showTab('planner')">Planer trasy</button>
+</div>
+
+<nav>
+    <button onclick="showTab('booking')">OBIEKTY</button>
+    <button onclick="showTab('planner')" class="active">PLANER TRASY</button>
+</nav>
+
+<div class="main-content">
+    <div id="section-planner" class="page-section active">
+        <div id="loader" class="loading-overlay">Pobieranie wysokości...</div>
+
+        <div class="planner-sidebar">
+            <div id="error-banner" class="error-banner"></div>
+
+            <!-- SEARCH UI (szybkie podpowiedzi) -->
+            <div class="map-search" id="map-search">
+                <div class="search-box">
+                    <div class="search-icn"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <input id="search-input" type="text" placeholder="Szukaj miejsca, szlaku lub regionu" autocomplete="off" />
+                    <button class="clear-btn" id="search-clear" title="Wyczyść" style="display:none;">×</button>
+                </div>
+
+                <div class="dropdown" id="search-dropdown" style="display:none;">
+                    <div class="results" id="search-results"></div>
+                </div>
+            </div>
+
+            <div id="waypoints-container" class="waypoints-list">
+                <p style="text-align:center; color:#999;">Kliknij prawym przyciskiem na mapę, aby dodać punkty trasy.</p>
+            </div>
+
+            <div id="route-steps" style="display:none; border-top:1px solid #eee;">
+                <div style="padding:14px 20px; display:flex; align-items:center; justify-content:space-between;">
+                    <b style="color:#003580;">PRZEBIEG TRASY</b>
+                    <div style="display:flex; gap:10px; color:#666;">
+                        <button id="steps-prev" style="border:none;background:#f2f2f2;padding:6px 10px;border-radius:6px;cursor:pointer;">‹</button>
+                        <button id="steps-next" style="border:none;background:#f2f2f2;padding:6px 10px;border-radius:6px;cursor:pointer;">›</button>
+                    </div>
+                </div>
+                <div id="route-steps-list" style="max-height: 38vh; overflow:auto; padding: 0 10px 12px;"></div>
+            </div>
+
+            <div id="planner-stats" style="display: none;">
+                <div class="route-summary-box">
+                    <div class="time-dist" id="p-time">--:--</div>
+                    <div style="margin-bottom: 15px; font-weight: bold; color:#666;" id="p-dist">-- km</div>
+
+                    <div class="stat-item"><span>Suma podejść:</span> <b id="p-asc">--</b></div>
+                    <div class="stat-item"><span>Suma zejść:</span> <b id="p-desc">--</b></div>
+                    <div class="stat-item"><span>Punkty GOT:</span> <b id="p-got" style="color: #d32f2f;">--</b></div>
+                </div>
+                <div style="padding: 15px; display: flex; gap: 5px;">
+                    <button onclick="clearPlanner()" style="flex:1; padding:10px; border:none; background:#eee; cursor:pointer; font-weight:bold;">WYCZYŚĆ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAPA -->
+        <div style="flex: 1; position: relative;">
+            <div id="map-planner"></div>
+
+            <div class="engine-badge">
+                <i class="fa-solid fa-shoe-prints"></i> BRouter - trasy górskie
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<script>
+// ─── MAP SETUP ───────────────────────────────────────────────────────────────
+const mapPlanner = L.map('map-planner', { maxZoom: 17 }).setView([49.47, 20.75], 12);
+L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png').addTo(mapPlanner);
+L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png').addTo(mapPlanner);
+setTimeout(() => mapPlanner.invalidateSize(), 50);
+
+// ─── ELEVATION HELPERS (fallback when BRouter has no elevation) ──────────────
+const OPEN_ELEVATION_URL = 'https://api.open-elevation.com/api/v1/lookup';
+
+function sampleEvery(arr, step) {
+    const out = [];
+    for (let i = 0; i < arr.length; i += step) out.push(arr[i]);
+    if (arr.length > 0 && out[out.length - 1] !== arr[arr.length - 1]) out.push(arr[arr.length - 1]);
+    return out;
+}
+
+async function fetchElevationsBatch(latLngs) {
+    const locations = latLngs.map(p => `${p.lat},${p.lng}`).join('|');
+    const url = `${OPEN_ELEVATION_URL}?locations=${encodeURIComponent(locations)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Elevation HTTP ${res.status}`);
+    const data = await res.json();
+    const results = data?.results || [];
+    return results.map(r => (typeof r.elevation === 'number' ? r.elevation : null));
+}
+
+function calcAscDescFromElevations(elevs) {
+    let asc = 0, desc = 0;
+    for (let i = 1; i < elevs.length; i++) {
+        const a = elevs[i - 1], b = elevs[i];
+        if (typeof a !== 'number' || typeof b !== 'number') continue;
+        const d = b - a;
+        if (d > 0) asc += d;
+        else desc += (-d);
+    }
+    return { asc, desc };
+}
+
+// ─── SEARCH (Nominatim) — FAST SUGGEST ───────────────────────────────────────
+const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org/search';
+let searchMarker = null;
+
+let searchDebounce = null;
+let activeController = null;
+
+const searchCache = new Map();
+const CACHE_MAX = 50;
+
+const DEBOUNCE_MS = 120;
+const MIN_CHARS = 2;
+
+function showDropdown(show) { document.getElementById('search-dropdown').style.display = show ? 'block' : 'none'; }
+function setResultsHtml(html) { document.getElementById('search-results').innerHTML = html; }
+function truncate(s, max=70) { if (!s) return ''; return s.length > max ? s.slice(0, max-1) + '…' : s; }
+function pickIconForType(item) {
+    const cls = (item.class || '').toLowerCase();
+    const typ = (item.type || '').toLowerCase();
+    if (typ.includes('peak')) return 'fa-mountain-sun';
+    if (typ.includes('pass')) return 'fa-route';
+    if (cls === 'place') return 'fa-house';
+    if (cls === 'boundary') return 'fa-mountain';
+    if (cls === 'route' || cls === 'highway') return 'fa-person-hiking';
+    return 'fa-location-dot';
+}
+function cacheSet(key, val){
+    if (searchCache.has(key)) searchCache.delete(key);
+    searchCache.set(key, val);
+    if (searchCache.size > CACHE_MAX) searchCache.delete(searchCache.keys().next().value);
+}
+function cacheGetBestPrefix(q){
+    if (searchCache.has(q)) return searchCache.get(q);
+    let best = null;
+    for (const k of searchCache.keys()){
+        if (k.length >= MIN_CHARS && q.startsWith(k)) {
+            if (!best || k.length > best.k.length) best = { k, items: searchCache.get(k) };
+        }
+    }
+    return best?.items || null;
+}
+function formatTitle(item){
+    const n = (item?.name || '').trim();
+    if (n) return n;
+    const dn = (item?.display_name || '').trim();
+    return dn ? dn.split(',')[0].trim() : 'Wynik';
+}
+function formatRegionLine(item){
+    const a = item?.address || {};
+    const parts = [a.region, a.county, a.state].filter(Boolean);
+    if (parts.length === 0 && item?.display_name) return truncate(item.display_name.split(',').slice(1, 3).join(',').trim(), 60);
+    return truncate(parts.join(' · '), 60);
+}
+async function nominatimSearch(q, signal) {
+    const url =
+        `${NOMINATIM_BASE}?format=jsonv2&q=${encodeURIComponent(q)}` +
+        `&limit=8&addressdetails=1&accept-language=pl&countrycodes=pl&dedupe=1`;
+    const res = await fetch(url, { signal });
+    if (!res.ok) throw new Error('Błąd wyszukiwania');
+    return await res.json();
+}
+function setSearchMarker(lat, lon, label) {
+    if (searchMarker) mapPlanner.removeLayer(searchMarker);
+    searchMarker = L.marker([lat, lon]).addTo(mapPlanner).bindPopup(label || 'Wynik wyszukiwania');
+    searchMarker.openPopup();
+}
+function renderResults(items) {
+    if (!items || items.length === 0) { setResultsHtml(`<div class="hint">Brak wyników. Spróbuj innej frazy.</div>`); return; }
+
+    const html = items.map((it, idx) => {
+        const title = formatTitle(it);
+        const region = formatRegionLine(it);
+        const icon = pickIconForType(it);
+        return `
+          <div class="result-item" data-idx="${idx}">
+            <div class="r-icon"><i class="fa-solid ${icon}"></i></div>
+            <div>
+              <div class="r-title">${truncate(title, 44)}</div>
+              <div class="r-sub">${region}</div>
+            </div>
+          </div>
+        `;
+    }).join('');
+    setResultsHtml(html);
+
+    document.querySelectorAll('.result-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const idx = parseInt(el.getAttribute('data-idx'), 10);
+            const it = items[idx];
+            const lat = parseFloat(it.lat);
+            const lon = parseFloat(it.lon);
+
+            mapPlanner.flyTo([lat, lon], 14, { duration: 0.9 });
+            setSearchMarker(lat, lon, it.display_name || formatTitle(it));
+            showDropdown(false);
+        });
+    });
+}
+function setupSearchUI() {
+    const input = document.getElementById('search-input');
+    const clearBtn = document.getElementById('search-clear');
+
+    input.addEventListener('focus', () => showDropdown(true));
+
+    input.addEventListener('input', () => {
+        const q = input.value.trim();
+        clearBtn.style.display = q.length ? 'block' : 'none';
+        showDropdown(true);
+
+        if (q.length >= MIN_CHARS) {
+            const cached = cacheGetBestPrefix(q);
+            if (cached) renderResults(cached);
+            else setResultsHtml(`<div class="hint">Szukam…</div>`);
+        } else {
+            setResultsHtml(`<div class="hint">Wpisz co najmniej ${MIN_CHARS} znaki, aby wyszukać.</div>`);
+        }
+
+        if (searchDebounce) clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(async () => {
+            const q2 = input.value.trim();
+            if (q2.length < MIN_CHARS) return;
+
+            if (activeController) activeController.abort();
+            activeController = new AbortController();
+
+            try {
+                const items = await nominatimSearch(q2, activeController.signal);
+                cacheSet(q2, items);
+                if (input.value.trim() === q2) renderResults(items);
+            } catch (e) {
+                if (e.name === 'AbortError') return;
+                setResultsHtml(`<div class="hint">Nie udało się pobrać wyników.</div>`);
+            }
+        }, DEBOUNCE_MS);
+    });
+
+    clearBtn.addEventListener('click', () => {
+        input.value = '';
+        clearBtn.style.display = 'none';
+        setResultsHtml('');
+        showDropdown(false);
+        if (searchMarker) { mapPlanner.removeLayer(searchMarker); searchMarker = null; }
+        input.blur();
+    });
+
+    document.addEventListener('click', (ev) => {
+        const root = document.getElementById('map-search');
+        if (!root.contains(ev.target)) showDropdown(false);
+    });
+
+    input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape') showDropdown(false);
+        if (ev.key === 'Enter') {
+            const first = document.querySelector('.result-item');
+            if (first) first.click();
+        }
+    });
+}
+setupSearchUI();
+
+// ─── BROUTER ROUTER ──────────────────────────────────────────────────────────
+const BR_URL     = 'https://brouter.de/brouter';
+const BR_PROFILE = 'hiking-mountain';
+
+const brRouter = {
+    route: async function(waypoints, callback, context) {
+        const validWps = waypoints.filter(w => w.latLng);
+        if (validWps.length < 2) { callback.call(context, null, []); return; }
+
+        const lonlats = validWps.map(w => `${w.latLng.lng},${w.latLng.lat}`).join('|');
+        const url = `${BR_URL}?lonlats=${lonlats}&profile=${BR_PROFILE}&alternativeidx=0&format=geojson`;
+
+        try {
+            showError(null);
+            const res  = await fetch(url);
+            if (!res.ok) throw new Error(`BRouter HTTP ${res.status}`);
+            const geojson = await res.json();
+
+            const feature = geojson.features[0];
+            const props   = feature.properties;
+            const rawCoords = feature.geometry.coordinates; // [lng, lat, ele?]
+
+            // For drawing
+            const coords = rawCoords.map(c => L.latLng(c[1], c[0]));
+
+            // Prefer properties if available
+            let ascent  = parseFloat(props['filtered ascend']  ?? props.ascend  ?? 0);
+            let descent = parseFloat(props['filtered descend'] ?? props.descend ?? 0);
+
+            // Total distance
+            const distM  = parseFloat(props['track-length'] ?? 0) ||
+                           rawCoords.reduce((acc, c, i) => {
+                               if (i === 0) return 0;
+                               const p = rawCoords[i-1];
+                               const dx = (c[0]-p[0]) * 111320 * Math.cos(c[1]*Math.PI/180);
+                               const dy = (c[1]-p[1]) * 110540;
+                               return acc + Math.sqrt(dx*dx + dy*dy);
+                           }, 0);
+            const distKm = distM / 1000;
+
+            // 1) Fallback from rawCoords elevations (if present)
+            const hasRawElev = rawCoords && rawCoords.some(c => typeof c[2] === 'number');
+
+            if ((descent <= 0 || !isFinite(descent)) && hasRawElev) {
+                ascent = 0;
+                descent = 0;
+
+                for (let i = 1; i < rawCoords.length; i++) {
+                    const prevEle = rawCoords[i - 1][2];
+                    const curEle  = rawCoords[i][2];
+                    if (typeof prevEle !== 'number' || typeof curEle !== 'number') continue;
+
+                    const diff = curEle - prevEle;
+                    if (diff > 0) ascent += diff;
+                    else descent += (-diff);
+                }
+            }
+
+            // 2) If still 0 descent and route is non-trivial, fetch elevations externally and compute
+            const shouldFallbackElevation =
+                (!isFinite(descent) || descent <= 0) && distM > 3000; // > 3 km
+
+            if (shouldFallbackElevation) {
+                try {
+                    const maxPoints = 120;
+                    const step = Math.max(1, Math.ceil(coords.length / maxPoints));
+                    const sampled = sampleEvery(coords, step);
+
+                    const elevs = await fetchElevationsBatch(sampled);
+                    const ad = calcAscDescFromElevations(elevs);
+
+                    if (ad.desc > 0) {
+                        ascent = ad.asc;
+                        descent = ad.desc;
+                    }
+                } catch (e) {
+                    console.warn('Elevation fallback failed:', e);
+                }
+            }
+
+            // Naismith + GOT
+            const totalMinutes = (distKm / 4) * 60 + (ascent / 600) * 60;
+            const gotPoints    = Math.round(distKm + ascent / 100);
+
+            updateUI(distKm, totalMinutes, ascent, descent, gotPoints);
+
+            const route = {
+                name:        'Trasa górska (BRouter)',
+                coordinates: coords,
+                instructions: [],
+                summary: { totalDistance: distM, totalTime: totalMinutes * 60 },
+                inputWaypoints:  validWps,
+                actualWaypoints: validWps,
+                waypoints:       validWps
+            };
+
+            callback.call(context, null, [route]);
+        } catch(e) {
+            console.error('BRouter error:', e);
+            showError('Błąd routingu BRouter: ' + e.message + '. Sprawdź czy punkty leżą w pobliżu szlaków.');
+            callback.call(context, e, []);
+        }
+    }
+};
+
+/* ─── ROUTE STYLE: high-contrast multi-stroke + neon core ─────────────────── */
+const ROUTE_STYLES = [
+    { color: '#0b0b0b', weight: 10, opacity: 0.80, lineCap: 'round', lineJoin: 'round' }, // outline
+    { color: '#ffffff', weight: 7,  opacity: 0.95, lineCap: 'round', lineJoin: 'round' }, // halo
+    { color: '#39ff14', weight: 4,  opacity: 0.98, lineCap: 'round', lineJoin: 'round' }  // core (NEON)
+];
+
+const routingControl = L.Routing.control({
+    waypoints: [],
+    router: brRouter,
+    lineOptions: { styles: ROUTE_STYLES, addWaypoints: false, extendToWaypoints: true, missingRouteTolerance: 0 },
+    createMarker: (i, wp) => L.marker(wp.latLng, {
+        draggable: true,
+        icon: L.divIcon({
+            className: '',
+            html: `<div style="background:white; border:3px solid ${i===0?'#ff8c00':'#003580'};
+                   border-radius:50%; width:28px; height:28px; text-align:center;
+                   font-weight:bold; line-height:24px;
+                   box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                   ${String.fromCharCode(65+i)}</div>`
+        })
+    }),
+    addWaypoints: false,
+    routeWhileDragging: false,
+    show: false
+}).addTo(mapPlanner);
+
+// ─── WAYPOINT UI (with remove buttons) ───────────────────────────────────────
+async function getLocationName(lat, lng) {
+    try {
+        const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=15`);
+        const data = await res.json();
+        return data.display_name.split(',')[0] || 'Punkt trasy';
+    } catch(e) { return 'Punkt trasy'; }
+}
+function removeWaypointAt(index){
+    const current = routingControl.getWaypoints().filter(w => w.latLng);
+    if (index < 0 || index >= current.length) return;
+    current.splice(index, 1);
+    routingControl.setWaypoints(current);
+    if (current.length === 0) document.getElementById('planner-stats').style.display = 'none';
+}
+routingControl.on('waypointschanged', async (e) => {
+    const container = document.getElementById('waypoints-container');
+    const validWps  = e.waypoints.filter(w => w.latLng);
+
+    if (validWps.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#999;">Kliknij prawym przyciskiem na mapę, aby dodać punkty trasy.</p>';
+        document.getElementById('planner-stats').style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = '<div style="text-align:center; padding:10px; color:#999;">Ładowanie nazw…</div>';
+
+    const items = await Promise.all(validWps.map(async (wp, i) => {
+        const name = await getLocationName(wp.latLng.lat, wp.latLng.lng);
+        const labelColor = i===0 ? '#ff8c00' : 'var(--primary)';
+        const label = String.fromCharCode(65+i);
+
+        return `
+          <div class="waypoint-item" data-wp-index="${i}">
+            <div class="waypoint-left">
+              <b style="color:${labelColor}">${label}</b>
+              <span class="waypoint-name" title="${name}">${name}</span>
+            </div>
+            <button class="wp-remove" title="Usuń punkt" aria-label="Usuń punkt">×</button>
+          </div>
+        `;
+    }));
+
+    container.innerHTML = items.join('');
+
+    container.querySelectorAll('.waypoint-item').forEach(row => {
+        const idx = parseInt(row.getAttribute('data-wp-index'), 10);
+        const btn = row.querySelector('.wp-remove');
+        if (btn) btn.onclick = () => removeWaypointAt(idx);
+    });
+});
+
+// ─── CONTEXT MENU ─────────────────────────────────────────────────────────────
+mapPlanner.on('contextmenu', (e) => {
+    const wps = routingControl.getWaypoints().filter(wp => wp.latLng);
+    const div = document.createElement('div');
+    div.className = 'custom-popup';
+    div.innerHTML = `
+        <div class="menu-item" onclick="addWP(${e.latlng.lat}, ${e.latlng.lng}, ${wps.length === 0 ? 0 : -1})">
+            <i class="fa-solid fa-location-dot"></i>
+            ${wps.length === 0 ? 'Rozpocznij tutaj' : 'Dodaj punkt trasy'}
+        </div>`;
+    L.popup().setLatLng(e.latlng).setContent(div).openOn(mapPlanner);
+});
+window.addWP = (lat, lng, idx) => {
+    const current = routingControl.getWaypoints().map(w => w.latLng).filter(x => x);
+    if (idx === 0) routingControl.setWaypoints([L.latLng(lat, lng)]);
+    else { current.push(L.latLng(lat, lng)); routingControl.setWaypoints(current); }
+    mapPlanner.closePopup();
+};
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+function updateUI(dist, mins, asc, desc, got) {
+    document.getElementById('planner-stats').style.display = 'block';
+    document.getElementById('p-dist').innerText = dist.toFixed(1) + ' km';
+    const h = Math.floor(mins / 60);
+    const m = Math.round(mins % 60);
+    document.getElementById('p-time').innerText = `${h}h ${m < 10 ? '0' : ''}${m} min`;
+    document.getElementById('p-asc').innerText  = Math.round(asc)  + ' m';
+    document.getElementById('p-desc').innerText = Math.round(desc) + ' m';
+    document.getElementById('p-got').innerText  = got;
+}
+function showError(msg) {
+    const el = document.getElementById('error-banner');
+    if (msg) { el.innerText = msg; el.style.display = 'block'; }
+    else      { el.style.display = 'none'; }
+}
+function clearPlanner() {
+    routingControl.setWaypoints([]);
+    document.getElementById('planner-stats').style.display = 'none';
+    showError(null);
+}
+function showTab(tab) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById('section-' + tab);
+    if (el) el.classList.add('active');
+    setTimeout(() => mapPlanner.invalidateSize(), 200);
+}
+</script>
+
+</body>
+</html>
