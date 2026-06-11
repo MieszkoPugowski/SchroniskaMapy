@@ -18,7 +18,7 @@ def run_conversion():
     output_file = 'Schroniska_gotowe.xlsx'
     
     # 1. Wczytanie danych - tylko wybrane kolumny
-    columns_to_load = ['Nazwa schroniska', 'Pasmo górskie', 'Lokalizacja', 'Wysokość n.p.m.', 'Liczba dostępnych miejsc', 'Ocena gości', 'Ceny noclegu']
+    columns_to_load = ['Nazwa schroniska', 'Pasmo górskie', 'Lokalizacja', 'Wysokość n.p.m.', 'Liczba dostępnych miejsc', 'Ocena gości', 'Ceny noclegu', 'Zdjęcie']
     df = pd.read_excel(input_file, usecols=columns_to_load)
     
     # 2. Pominięcie pustych lokalizacji
