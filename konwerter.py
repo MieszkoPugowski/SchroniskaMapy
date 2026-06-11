@@ -14,11 +14,12 @@ def clean_address(text):
     return ' '.join(text.split()).strip()
 
 def run_conversion():
-    input_file = 'Schroniska adresy.xlsx'
+    input_file = 'schroniska.xlsx'
     output_file = 'Schroniska_gotowe.xlsx'
     
-    # 1. Wczytanie danych
-    df = pd.read_excel(input_file)
+    # 1. Wczytanie danych - tylko wybrane kolumny
+    columns_to_load = ['Nazwa schroniska', 'Pasmo górskie', 'Lokalizacja']
+    df = pd.read_excel(input_file, usecols=columns_to_load)
     
     # 2. Pominięcie pustych lokalizacji
     initial_count = len(df)
