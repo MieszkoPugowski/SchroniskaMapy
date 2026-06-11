@@ -196,7 +196,6 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
     </div>
   </a>
   <div class="nav-right">
-    <!-- ↓ CHANGED: now opens the planner in a new tab -->
     <a class="nav-btn" href="planer-trasy.html" target="_blank" id="btnPlanRoute">🗺 Planuj trasę</a>
     <button class="nav-btn primary" id="btnLogin">Zaloguj się</button>
     <div class="user-chip" id="userChip" style="display:none" onclick="logoutPrompt()">
@@ -332,11 +331,11 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const COL = {
-  name:'Nazwa schroniska',range:'Pasmo górskie',alt:'Wysokość n.p.m. !',email:'E-mail !',phone:'Telefon !',
-  loc:'Lokalizacja ',season:'Terminy otwarcia !',places:'Liczba dostępnych miejsc ! ',floor:'Czy można spać na ziemi? !',
-  room1:'Pokoje jednoosobowe !',room2:'Pokoje 2-osobowe',room3:'Pokoje 3-osobowe',room4:'Pokoje 4-osobowe !',
-  roomX:'Pokoje wieloosobowe',price:'Ceny noclegu !',bedding:'Pościel czy śpiwór',food:'Wyżywienie',
-  rating:'Ocena gości ',pets:'Czy można nocować zwierzę ',photo:'Zdjęcie',
+  name:'Nazwa schroniska',range:'Pasmo górskie',alt:'Wysokość n.p.m.',places:'Liczba dostępnych miejsc',rating:'Ocena gości',price:'Ceny noclegu',
+  loc:'Lokalizacja',season:'Terminy otwarcia',email:'E-mail',phone:'Telefon',
+  room1:'Pokoje jednoosobowe',room2:'Pokoje 2-osobowe',room3:'Pokoje 3-osobowe',room4:'Pokoje 4-osobowe',
+  roomX:'Pokoje wieloosobowe',bedding:'Pościel czy śpiwór',food:'Wyżywienie',
+  pets:'Czy można nocować zwierzę',photo:'Zdjęcie',
 };
 
 const GEO_COL = {name:'Nazwa schroniska',lat:'lat',lon:'lon'};
@@ -423,7 +422,7 @@ function renderCards(data){
       <div class="card-body">
         <div class="card-name">${name}</div>
         <div class="card-meta">
-          ${alt?`<div class="meta-tag">⛰ ${alt}</div>`:''}
+          ${alt?`<div class="meta-tag">🏔️ ${alt}</div>`:''}
           ${places?`<div class="meta-tag">👥 ${places} miejsc</div>`:''}
           ${rating?`<div class="meta-tag">⭐ ${rating}</div>`:''}
           ${price?`<div class="meta-tag">💰 ${price}</div>`:''}
@@ -450,7 +449,7 @@ function clearRoute(){routeList.length=0;saveRoute();applyFilters();toast('🗑 
 function openDetails(e,name){
   e&&e.stopPropagation();const idx=allData.findIndex(r=>sv(r[COL.name])===name);if(idx<0)return;const row=allData[idx];
   document.getElementById('dmName').textContent=name;document.getElementById('dmImg').src=imgSrc(row,idx);
-  const fields=[[COL.range,'🏔','Pasmo górskie'],[COL.alt,'⛰','Wysokość'],[COL.loc,'📍','Lokalizacja'],[COL.season,'📅','Otwarcie'],[COL.places,'👥','Miejsca noclegowe'],[COL.price,'💰','Cena'],[COL.email,'📧','E-mail'],[COL.phone,'☎️','Telefon'],[COL.food,'🍽','Wyżywienie']];
+  const fields=[[COL.range,'🏔','Pasmo górskie'],[COL.alt,'🏔️','Wysokość'],[COL.loc,'📍','Lokalizacja'],[COL.season,'📅','Otwarcie'],[COL.places,'👥','Miejsca noclegowe'],[COL.price,'💰','Cena'],[COL.rating,'⭐','Ocena'],[COL.email,'📧','E-mail'],[COL.phone,'☎️','Telefon'],[COL.food,'🍽','Wyżywienie']];
   const rooms=[];if(cleanNum(row[COL.room1]))rooms.push(`1-os: ${cleanNum(row[COL.room1])}`);if(cleanNum(row[COL.room2]))rooms.push(`2-os: ${cleanNum(row[COL.room2])}`);if(cleanNum(row[COL.room3]))rooms.push(`3-os: ${cleanNum(row[COL.room3])}`);if(cleanNum(row[COL.room4]))rooms.push(`4-os: ${cleanNum(row[COL.room4])}`);if(cleanNum(row[COL.roomX]))rooms.push(`Wieloosobowe: ${cleanNum(row[COL.roomX])}`);
   let html=fields.map(([key,icon,label])=>{const v=sv(row[key]);if(!v)return '';return `<div class="chip"><div class="chip-label">${icon} ${label}</div><div class="chip-val">${v}</div></div>`;}).filter(Boolean).join('');
   if(rooms.length)html+=`<div class="chip" style="grid-column:1/-1"><div class="chip-label">🏠 Pokoje</div><div class="chip-val">${rooms.join(' · ')}</div></div>`;
@@ -507,11 +506,8 @@ function setUser(u){currentUser=u;saveUser();document.getElementById('btnLogin')
 function logoutPrompt(){if(confirm(`Wylogować się? (${currentUser?.name})`)){currentUser=null;try{localStorage.removeItem('sh_user');}catch(e){}document.getElementById('btnLogin').style.display='block';document.getElementById('userChip').style.display='none';};}
 
 async function boot(){
-  // Główne dane są ładowane z Schroniska_gotowe.xlsx
   try{allData=await loadSheetRows('Schroniska_gotowe.xlsx');}catch(e){allData=[];}
-  // Jeśli Schroniska_gotowe.xlsx zawiera współrzędne, można je również użyć
-  if(allData.length){hydrateGeoCache(allData);} // Hydratacja geo ze struktury głównych danych
-  // Fallback: jeśli brakuje danych
+  if(allData.length){hydrateGeoCache(allData);}
   if(!allData.length){
     const tryFiles=['Schroniska_Baza.xlsx','Schroniska Baza.xlsx'];
     for(const file of tryFiles){
