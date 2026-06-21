@@ -33,7 +33,7 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
 .logo-wordmark .brand{font-family:'Lora',serif;font-size:1.25rem;font-weight:700;color:var(--moss);}
 .logo-wordmark .sub{font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--fern);font-weight:600;}
 .nav-right{display:flex;align-items:center;gap:10px;}
-.nav-btn{border:1.5px solid rgba(74,124,89,0.22);background:transparent;color:var(--moss2);padding:8px 18px;border-radius:999px;cursor:pointer;font-family:'Nunito';font-size:0.82rem;font-weight:700;transition:all 0.18s;}
+.nav-btn{border:1.5px solid rgba(74,124,89,0.22);background:transparent;color:var(--moss2);padding:8px 18px;border-radius:999px;cursor:pointer;font-family:'Nunito';font-size:0.82rem;font-weight:700;transition:all 0.18s;text-decoration:none;}
 .nav-btn:hover{background:var(--dew);border-color:var(--fern);color:var(--fern);}
 .nav-btn.primary{background:var(--moss);border-color:var(--moss);color:var(--cream);}
 .nav-btn.primary:hover{background:var(--moss2);}
@@ -67,7 +67,7 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
 #searchInput{width:100%;padding:13px 16px 13px 46px;background:white;border:1.5px solid rgba(74,124,89,0.18);border-radius:var(--r);font-family:'Nunito';font-size:0.9rem;color:var(--moss);outline:none;transition:all 0.18s;}
 #searchInput:focus{border-color:var(--fern);box-shadow:0 0 0 3px rgba(74,124,89,0.1),var(--shadow);}
 #searchInput::placeholder{color:rgba(74,124,89,0.4);}
-.filter-sel{padding:13px 16px;background:white;border:1.5px solid rgba(74,124,89,0.18);border-radius:var(--r);font-family:'Nunito';font-size:0.85rem;color:var(--moss);outline:none;cursor:pointer;border-radius:var(--r);transition:all 0.18s;}
+.filter-sel{padding:13px 16px;background:white;border:1.5px solid rgba(74,124,89,0.18);border-radius:var(--r);font-family:'Nunito';font-size:0.85rem;color:var(--moss);outline:none;cursor:pointer;transition:all 0.18s;}
 
 /* TABS */
 .tabs{display:flex;max-width:1640px;margin:0 auto;padding:0 48px;border-bottom:1.5px solid rgba(74,124,89,0.13);position:relative;z-index:1;}
@@ -103,29 +103,41 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
 .btn-green:hover{background:var(--moss2);}
 .btn-outline{background:transparent;border:1.5px solid rgba(74,124,89,0.22);color:var(--fern);}
 .btn-outline:hover{background:var(--dew);border-color:var(--fern);}
-.btn-route{background:linear-gradient(135deg,var(--fern),var(--moss));color:var(--cream);}
-.btn-route:hover{opacity:0.88;}
-.btn-danger{background:#c0392b;color:white;}
-.btn-danger:hover{background:#a93226;}
-.btn-route-active{background:#e67e22;color:white;}
-.btn-route-active:hover{background:#d35400;}
-.no-coords{display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;color:rgba(74,124,89,0.45);font-style:italic;}
 
 /* SIDEBAR */
 .sidebar{position:sticky;top:88px;height:calc(100vh - 108px);display:flex;flex-direction:column;gap:14px;}
-.map-shell{flex:1;border-radius:var(--r-lg);overflow:hidden;border:1.5px solid rgba(74,124,89,0.15);box-shadow:var(--shadow-lg);position:relative;}
+.map-shell{flex:1;border-radius:var(--r-lg);overflow:hidden;border:1.5px solid rgba(74,124,89,0.15);box-shadow:var(--shadow-lg);position:relative;min-height:460px;}
 .map-top-label{position:absolute;top:13px;left:13px;z-index:999;background:rgba(245,240,232,0.92);border-radius:999px;padding:6px 14px;font-size:0.69rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--fern);font-weight:700;}
 #map{width:100%;height:100%;}
 
-/* ROUTE SIDEBAR PANEL */
-.route-panel{background:white;border-radius:var(--r-lg);border:1.5px solid rgba(74,124,89,0.15);box-shadow:var(--shadow);padding:14px 16px;display:none;max-height:220px;overflow-y:auto;}
-.route-panel.visible{display:block;}
-.route-title{font-family:'Lora',serif;font-size:0.95rem;font-weight:700;color:var(--moss);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
-.route-stop{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid rgba(74,124,89,0.07);}
-.route-stop:last-child{border-bottom:none;}
-.stop-num{width:20px;height:20px;background:var(--moss);color:var(--cream);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:800;flex-shrink:0;}
-.stop-name{font-size:0.78rem;font-weight:600;color:var(--moss);flex:1;line-height:1.3;}
-.stop-remove{background:none;border:none;cursor:pointer;color:#c0392b;font-size:0.75rem;padding:2px 5px;border-radius:4px;}
+/* MAP ROUND MARKER IMAGE */
+.map-photo-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(30,50,30,0.35);
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--moss), var(--fern));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+.map-photo-icon:hover {
+  transform: scale(1.12);
+  z-index: 1000 !important;
+}
+.map-photo-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.map-photo-icon svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0.9;
+}
 
 /* TOAST */
 .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--moss);color:var(--cream);padding:11px 22px;border-radius:999px;font-size:0.8rem;font-weight:700;transition:transform 0.3s,opacity 0.3s;opacity:0;pointer-events:none;}
@@ -165,20 +177,6 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
 .chip-val{font-size:0.82rem;color:var(--moss);font-weight:600;line-height:1.3;}
 .dmodal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid rgba(74,124,89,0.08);}
 
-/* ROUTE MODAL */
-.rmodal{max-width:700px;}
-#routeMap{width:100%;height:280px;border-radius:12px;overflow:hidden;margin-bottom:14px;}
-.rmodal-stop{display:flex;align-items:center;gap:10px;background:white;border:1.5px solid rgba(74,124,89,0.1);border-radius:10px;padding:9px 13px;margin-bottom:6px;}
-.rmodal-num{width:24px;height:24px;background:var(--fern);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:800;flex-shrink:0;}
-.rmodal-info{flex:1;}
-.rmodal-name{font-size:0.85rem;font-weight:700;color:var(--moss);}
-.rmodal-meta{font-size:0.7rem;color:var(--fern);opacity:0.7;margin-top:1px;}
-.rmodal-rm{background:none;border:none;cursor:pointer;color:#c0392b;font-size:0.95rem;padding:4px 7px;border-radius:5px;}
-.rmodal-empty{text-align:center;padding:28px;color:var(--fern);opacity:0.45;font-size:0.85rem;}
-.route-info-box{background:rgba(74,124,89,0.06);border-radius:10px;padding:11px 14px;font-size:0.78rem;color:var(--fern);line-height:1.6;margin-bottom:12px;}
-.rmodal-stops{max-height:200px;overflow-y:auto;margin-bottom:12px;}
-.rmodal-actions{display:flex;gap:8px;flex-wrap:wrap;}
-
 @media(max-width:1200px){.main-container{grid-template-columns:1fr;}.sidebar{position:relative;top:auto;height:460px;}}
 @media(max-width:720px){.card{grid-template-columns:1fr;}.card-img-wrap{height:190px;}header{padding:0 16px;}.hero{padding:36px 16px 24px;}.search-bar,.tabs,.main-container{padding-left:16px;padding-right:16px;}}
 </style>
@@ -207,14 +205,12 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
 
 <section class="hero">
   <div class="hero-left">
-    <div class="hero-pill">🌿 Odkryj polskie góry</div>
     <h2>Twoje miejsce<br>w <em>dziczy</em></h2>
     <p class="hero-desc">Przeglądaj schroniska, zapisuj ulubione i planuj trasy.</p>
   </div>
   <div class="hero-stats">
     <div class="stat"><div class="stat-num" id="heroCount">0</div><div class="stat-label">Schronisk</div></div>
     <div class="stat"><div class="stat-num" id="favCount">0</div><div class="stat-label">Ulubionych</div></div>
-    <div class="stat"><div class="stat-num" id="routeCount">0</div><div class="stat-label">W trasie</div></div>
   </div>
 </section>
 
@@ -229,7 +225,6 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('all',this)">Wszystkie <span class="tab-pill" id="cAll">0</span></button>
   <button class="tab-btn" onclick="switchTab('fav',this)">❤️ Ulubione <span class="tab-pill" id="cFav">0</span></button>
-  <button class="tab-btn" onclick="switchTab('route',this)">🗺 Trasa <span class="tab-pill" id="cRoute">0</span></button>
 </div>
 
 <div class="main-container">
@@ -239,17 +234,9 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
       <div class="map-top-label">📍 Mapa schronisk</div>
       <div id="map"></div>
     </div>
-    <div class="route-panel" id="routePanel">
-      <div class="route-title">🗺 Trasa
-        <button class="btn btn-danger" style="font-size:0.68rem;padding:3px 9px;border-radius:6px;" onclick="clearRoute()">Wyczyść</button>
-      </div>
-      <div id="routeSidebarStops"></div>
-      <button class="btn btn-route" style="width:100%;margin-top:10px;" onclick="openModal('routeModal');renderRouteModal()">📐 Otwórz planistę</button>
-    </div>
   </div>
 </div>
 
-<!-- geocode bar -->
 <div class="geo-bar" id="geoBar">
   <span id="geoMsg">⛰ Wyszukuję współrzędne...</span>
   <div class="geo-progress"><div class="geo-progress-fill" id="geoFill" style="width:0%"></div></div>
@@ -258,7 +245,6 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
 
 <div class="toast" id="toast"></div>
 
-<!-- LOGIN MODAL -->
 <div class="modal-overlay" id="loginModal">
   <div class="modal">
     <div class="modal-header">
@@ -291,7 +277,6 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
   </div>
 </div>
 
-<!-- DETAILS MODAL -->
 <div class="modal-overlay" id="detailsModal">
   <div class="modal dmodal">
     <div class="modal-header">
@@ -299,31 +284,9 @@ header{position:sticky;top:0;z-index:600;height:68px;padding:0 48px;display:flex
       <button class="modal-close" onclick="closeModal('detailsModal')">✕</button>
     </div>
     <div class="modal-body">
-      <img id="dmImg" class="dmodal-img" src="" alt=""
-           onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=900&auto=format&fit=crop'">
+      <img id="dmImg" class="dmodal-img" src="" alt="" onerror="this.src=FB[0]">
       <div class="chips-grid" id="dmChips"></div>
       <div class="dmodal-actions" id="dmActions"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ROUTE MODAL -->
-<div class="modal-overlay" id="routeModal">
-  <div class="modal rmodal">
-    <div class="modal-header">
-      <span class="modal-title">🗺 Planer Trasy</span>
-      <button class="modal-close" onclick="closeModal('routeModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="routeMap"></div>
-      <div class="route-info-box" id="routeInfoBox">Dodaj schroniska do trasy klikając <strong>„+ Trasa"</strong> przy karcie schroniska.</div>
-      <div class="rmodal-stops" id="rmodalStops"></div>
-      <div id="rmodalEmpty" class="rmodal-empty" style="display:none">Trasa jest pusta. Zamknij i dodaj schroniska!</div>
-      <div class="rmodal-actions">
-        <button class="btn btn-route" onclick="openInOSM()">🌍 Nawiguj (OSM)</button>
-        <button class="btn btn-outline" onclick="copyRoute()">📋 Kopiuj trasę</button>
-        <button class="btn btn-danger" onclick="clearRoute();renderRouteModal()">🗑 Wyczyść</button>
-      </div>
     </div>
   </div>
 </div>
@@ -344,22 +307,21 @@ function toCoord(v){const n=parseFloat(String(v).replace(',', '.'));return Numbe
 function hydrateGeoCache(rows){for(const row of rows){const name=sv(row[GEO_COL.name]??row[COL.name]);const lat=toCoord(row[GEO_COL.lat]);const lon=toCoord(row[GEO_COL.lon]);if(name&&lat!==null&&lon!==null)geoCache[name]={lat,lon};}}
 async function loadSheetRows(file){const res=await fetch(file);if(!res.ok)throw new Error('not ok');const buf=await res.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);}
 
-let allData=[],geoCache={},favourites=new Set(),routeList=[],currentUser=null,currentTab='all',mapMarkers={},routeMapObj=null;
+let allData=[],geoCache={},favourites=new Set(),currentUser=null,currentTab='all',mapMarkers={};
 try{geoCache=JSON.parse(localStorage.getItem('sh_geo')||'{}');}catch(e){}
 try{favourites=new Set(JSON.parse(localStorage.getItem('sh_favs')||'[]'));}catch(e){}
-try{routeList=JSON.parse(localStorage.getItem('sh_route')||'[]');}catch(e){}
 try{currentUser=JSON.parse(localStorage.getItem('sh_user')||'null');}catch(e){}
 
 function sv(v){if(v===null||v===undefined)return '';const s=String(v).trim();return(s===''||s==='NaN'||s==='N/A'||s==='0')?'':s;}
 function cleanNum(v){if(v===null||v===undefined)return '';const s=String(v).trim();if(s.toUpperCase()==='TAK')return '✓';const n=parseFloat(s);if(isNaN(n)||n<=0)return '';return String(Math.round(n));}
 function saveFavs(){try{localStorage.setItem('sh_favs',JSON.stringify([...favourites]));}catch(e){}}
-function saveRoute(){try{localStorage.setItem('sh_route',JSON.stringify(routeList));}catch(e){}updateCounts();}
 function saveGeo(){try{localStorage.setItem('sh_geo',JSON.stringify(geoCache));}catch(e){}}
 function saveUser(){try{localStorage.setItem('sh_user',JSON.stringify(currentUser));}catch(e){}}
 function toast(msg,dur=2400){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur);}
 function esc(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 
 const FB=['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1469022563149-aa64dbd37dae?q=80&w=900&auto=format&fit=crop'];
+
 function imgSrc(row, i) {
   const f = sv(row[COL.photo]);
   if (f) {
@@ -371,9 +333,23 @@ function imgSrc(row, i) {
 const mainMap=L.map('map').setView([49.55,20.1],7);
 L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap',maxZoom:17}).addTo(mainMap);
 
-function mkIcon(inRoute){const c=inRoute?'#e67e22':'#4a7c59';const s=inRoute?14:11;return L.divIcon({className:'',html:`<div style="width:${s}px;height:${s}px;background:${c};border:2px solid rgb(245,240,232);border-radius:50%;box-shadow:0 2px 8px rgba(45,74,45,0.3);"></div>`,iconSize:[s,s],iconAnchor:[s/2,s/2]});}
+function mkIcon(row, i){
+  const src = imgSrc(row, i);
+  const fallbackSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 19L8 10L12 15L16 8L21 19" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  
+  return L.divIcon({
+    className: '',
+    html: `<div class="map-photo-icon">
+             <img src="${src}" alt="icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+             <div style="display:none; width:100%; height:100%; padding:8px;">${fallbackSvg}</div>
+           </div>`,
+    iconSize: [44, 44],
+    iconAnchor: [22, 22]
+  });
+}
+
 function clearMarkers(){Object.values(mapMarkers).forEach(m=>mainMap.removeLayer(m));mapMarkers={};}
-function addMarker(row,i){const name=sv(row[COL.name]);const coords=geoCache[name];if(!coords)return;const inRoute=routeList.includes(name);const m=L.marker([coords.lat,coords.lon],{icon:mkIcon(inRoute)}).bindPopup(`<strong>${name}</strong>`).on('click',()=>focusMarker(name));m.addTo(mainMap);mapMarkers[name]=m;}
+function addMarker(row,i){const name=sv(row[COL.name]);const coords=geoCache[name];if(!coords)return;const m=L.marker([coords.lat,coords.lon],{icon:mkIcon(row, i)}).bindPopup(`<strong>${name}</strong>`).on('click',()=>focusMarker(name));m.addTo(mainMap);mapMarkers[name]=m;}
 function focusMarker(name){const m=mapMarkers[name];if(!m){toast('📍 Brak współrzędnych dla tego schroniska');return;}mainMap.setView(m.getLatLng(),14,{animate:true});m.openPopup();highlightCard(name);}
 function highlightCard(name){document.querySelectorAll('.card').forEach(c=>{const on=c.dataset.name===name;c.classList.toggle('highlighted',on);if(on)c.scrollIntoView({behavior:'smooth',block:'center'});});}
 
@@ -386,7 +362,7 @@ async function geocodeAll(data){
   for(const row of toProcess){
     const name=sv(row[COL.name]);const loc=sv(row[COL.loc]).replace(/\n/g,' ').trim();const query=loc||name;
     try{const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query+', Polska')}&format=json&limit=1&accept-language=pl`;const res=await fetch(url,{headers:{'Accept-Language':'pl'}});if(res.ok){const j=await res.json();if(j.length>0){const {lat,lon}=j[0];geoCache[name]={lat:parseFloat(lat),lon:parseFloat(lon)};}}}catch(e){}
-    done++;const p=Math.round((done/toProcess.length)*100);fill.style.width=p+'%';pct.textContent=p+'%';msg.textContent=`⛰ Geocodowanie ${done}/${toProcess.length}: ${name.substring(0,40)}...`;
+    done++;const p=Math.round((done/toProcess.length)*100);fill.style.width=p+'%';pct.textContent=p+'%';msg.textContent= `⛰ Geocodowanie ${done}/${toProcess.length}: ${name.substring(0,40)}...`;
     if(done%5===0)renderCards(getFiltered(currentTab));
     await new Promise(r=>setTimeout(r,1100));
   }
@@ -395,9 +371,10 @@ async function geocodeAll(data){
 }
 
 function updateCounts(){
-  document.getElementById('heroCount').textContent=allData.length;document.getElementById('favCount').textContent=favourites.size;document.getElementById('routeCount').textContent=routeList.length;
-  document.getElementById('cAll').textContent=getFiltered('all').length;document.getElementById('cFav').textContent=getFiltered('fav').length;document.getElementById('cRoute').textContent=getFiltered('route').length;
-  document.getElementById('routePanel').classList.toggle('visible',routeList.length>0);renderRouteSidebar();
+  document.getElementById('heroCount').textContent=allData.length;
+  document.getElementById('favCount').textContent=favourites.size;
+  document.getElementById('cAll').textContent=getFiltered('all').length;
+  document.getElementById('cFav').textContent=getFiltered('fav').length;
 }
 
 function getFiltered(tab){
@@ -406,7 +383,7 @@ function getFiltered(tab){
     const name=sv(r[COL.name]).toLowerCase(),loc=sv(r[COL.loc]).toLowerCase(),range=sv(r[COL.range]).toLowerCase();
     const qOk=!q||name.includes(q)||loc.includes(q)||range.includes(q);const pOk=!pasm||sv(r[COL.range])===pasm;
     const n=sv(r[COL.name]);let tOk=true;
-    if(tab==='fav')tOk=favourites.has(n);if(tab==='route')tOk=routeList.includes(n);
+    if(tab==='fav')tOk=favourites.has(n);
     return qOk&&pOk&&tOk;
   });
 }
@@ -416,8 +393,8 @@ function renderCards(data){
   if(!data.length){sec.innerHTML=`<div style="text-align:center;padding:56px;color:var(--fern);opacity:0.5;">Brak pasujących schronisk.</div>`;return;}
   data.forEach((row,i)=>{
     const name=sv(row[COL.name]),range=sv(row[COL.range]),alt=sv(row[COL.alt]),places=sv(row[COL.places]),rating=sv(row[COL.rating]),price=sv(row[COL.price]);
-    const isFav=favourites.has(name),inRt=routeList.includes(name);addMarker(row,i);
-    const card=document.createElement('div');card.className='card'+(inRt?' highlighted':'');card.dataset.name=name;
+    const isFav=favourites.has(name);addMarker(row,i);
+    const card=document.createElement('div');card.className='card';card.dataset.name=name;
     card.innerHTML=`
       <div class="card-img-wrap">
         <img class="card-img" src="${imgSrc(row,i)}" alt="${name}" loading="lazy" onerror="this.src='${FB[0]}'">
@@ -432,15 +409,12 @@ function renderCards(data){
           ${places?`<div class="meta-tag">👥 ${places} miejsc</div>`:''}
           ${rating?`<div class="meta-tag">⭐ ${rating}</div>`:''}
           ${price?`<div class="meta-tag">💰 ${price}</div>`:''}
-          ${inRt?`<div class="meta-tag" style="color:#e67e22">🗺 W trasie</div>`:''}
         </div>
         <div class="card-divider"></div>
         <div class="card-actions">
           <button class="btn btn-green" onclick="showOnMap(event,'${esc(name)}')">📍 Mapa</button>
           <button class="btn btn-outline" onclick="openDetails(event,'${esc(name)}')">Szczegóły</button>
-          <button class="btn ${inRt?'btn-route-active':'btn-route'}" onclick="toggleRoute(event,'${esc(name)}')">
-            ${inRt?'✓ W trasie':'+ Trasa'}
-          </button>
+          <button class="btn btn-outline" onclick="toggleFav(event,'${esc(name)}')">${isFav?'❤️ Ulubione':'🤍 Dodaj do ulubionych'}</button>
         </div>
       </div>`;
     sec.appendChild(card);
@@ -449,8 +423,8 @@ function renderCards(data){
 
 function showOnMap(e,name){e.stopPropagation();focusMarker(name);toast(`📍 ${name}`);}
 function toggleFav(e,name){e.stopPropagation();if(favourites.has(name)){favourites.delete(name);toast(`💔 Usunięto: ${name}`);}else{favourites.add(name);toast(`❤️ Ulubione: ${name}`);}saveFavs();applyFilters();}
-function toggleRoute(e,name){e&&e.stopPropagation();const idx=routeList.indexOf(name);if(idx>=0){routeList.splice(idx,1);toast(`🗺 Usunięto z trasy: ${name}`);}else{routeList.push(name);toast(`✓ Dodano do trasy: ${name}`);}saveRoute();applyFilters();}
-function clearRoute(){routeList.length=0;saveRoute();applyFilters();toast('🗑 Trasa wyczyszczona');}
+
+function applyFilters(){renderCards(getFiltered(currentTab));}
 
 function openDetails(e,name){
   e&&e.stopPropagation();const idx=allData.findIndex(r=>sv(r[COL.name])===name);if(idx<0)return;const row=allData[idx];
@@ -461,39 +435,11 @@ function openDetails(e,name){
   if(rooms.length)html+=`<div class="chip" style="grid-column:1/-1"><div class="chip-label">🏠 Pokoje</div><div class="chip-val">${rooms.join(' · ')}</div></div>`;
   if(!html)html=`<div class="chip"><div class="chip-label">ℹ️ Info</div><div class="chip-val">Brak dodatkowych danych</div></div>`;
   document.getElementById('dmChips').innerHTML=html;
-  const isFav=favourites.has(name),inRt=routeList.includes(name);
   document.getElementById('dmActions').innerHTML=`
-    <button class="btn btn-green" onclick="showOnMap(event,'${esc(name)}');closeModal('detailsModal')">📍 Pokaż na mapie</button>
-    <button class="btn btn-outline" id="dmFavBtn" onclick="toggleFav(event,'${esc(name)}');refreshDmFav('${esc(name)}')">${isFav?'❤️ Ulubione':'🤍 Dodaj do ulubionych'}</button>
-    <button class="btn ${inRt?'btn-route-active':'btn-route'}" onclick="toggleRoute(event,'${esc(name)}');closeModal('detailsModal')">${inRt?'✓ W trasie':'+ Dodaj do trasy'}</button>`;
+    <button class="btn btn-green" onclick="showOnMap(event,'${esc(name)}');closeModal('detailsModal')">📍 Pokaż na mapie</button>`;
   openModal('detailsModal');
 }
-function refreshDmFav(name){const btn=document.getElementById('dmFavBtn');if(btn)btn.textContent=favourites.has(name)?'❤️ Ulubione':'🤍 Dodaj do ulubionych';}
 
-function renderRouteModal(){
-  const stopsEl=document.getElementById('rmodalStops'),emptyEl=document.getElementById('rmodalEmpty'),infoEl=document.getElementById('routeInfoBox');
-  if(!routeList.length){stopsEl.innerHTML='';emptyEl.style.display='block';infoEl.innerHTML='Dodaj schroniska do trasy klikając <strong>„+ Trasa"</strong> przy karcie.';}
-  else{emptyEl.style.display='none';infoEl.innerHTML=`Trasa zawiera <strong>${routeList.length} ${routeList.length===1?'punkt':'punkty/punktów'}</strong>. Kliknij 🌍 Nawiguj, żeby otworzyć w OpenStreetMap.`;
-    stopsEl.innerHTML=routeList.map((name,i)=>{const row=allData.find(r=>sv(r[COL.name])===name);const range=row?sv(row[COL.range]):'';const alt=row?sv(row[COL.alt]):'';const meta=[range,alt].filter(Boolean).join(' · ');return `<div class="rmodal-stop"><div class="rmodal-num">${i+1}</div><div class="rmodal-info"><div class="rmodal-name">${name}</div><div class="rmodal-meta">${meta}</div></div><button class="rmodal-rm" onclick="removeFromRoute('${esc(name)}')">✕</button></div>`;}).join('');}
-  setTimeout(()=>{if(!routeMapObj){routeMapObj=L.map('routeMap').setView([49.55,20.1],7);L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap',maxZoom:17}).addTo(routeMapObj);}drawRouteOnModal();},100);
-}
-function drawRouteOnModal(){
-  if(!routeMapObj)return;routeMapObj.eachLayer(l=>{if(l instanceof L.Marker||l instanceof L.Polyline)routeMapObj.removeLayer(l);});
-  const pts=routeList.map(name=>{const c=geoCache[name];return c?[c.lat,c.lon]:null;}).filter(Boolean);
-  if(!pts.length)return;
-  pts.forEach((p,i)=>{const color=i===0?'#2d4a2d':i===pts.length-1?'#c0392b':'#e67e22';L.marker(p,{icon:L.divIcon({className:'',html:`<div style="width:28px;height:28px;background:${color};border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${i+1}</div>`,iconSize:[28,28],iconAnchor:[14,14]})}).addTo(routeMapObj);});
-  if(pts.length>1){const poly=L.polyline(pts,{color:'#e67e22',weight:3,opacity:0.85,dashArray:'9 5'}).addTo(routeMapObj);routeMapObj.fitBounds(poly.getBounds(),{padding:[24,24]});}else{routeMapObj.setView(pts[0],12);}
-}
-function removeFromRoute(name){const idx=routeList.indexOf(name);if(idx>=0)routeList.splice(idx,1);saveRoute();applyFilters();renderRouteModal();toast(`Usunięto: ${name}`);}
-function openInOSM(){if(!routeList.length){toast('Dodaj punkty do trasy!');return;}const pts=routeList.map(n=>geoCache[n]).filter(Boolean);if(pts.length<2){toast('Potrzeba min. 2 punktów z lokalizacją!');return;}const url=`https://www.openstreetmap.org/directions?engine=osrm_car&route=${pts.map(p=>`${p.lat},${p.lon}`).join(';')}`;window.open(url,'_blank');}
-function copyRoute(){if(!routeList.length){toast('Trasa jest pusta!');return;}navigator.clipboard.writeText(routeList.map((n,i)=>`${i+1}. ${n}`).join('\n')).then(()=>toast('📋 Skopiowano do schowka!',1800));}
-
-function renderRouteSidebar(){
-  const el=document.getElementById('routeSidebarStops');if(!routeList.length){el.innerHTML='';return;}
-  el.innerHTML=routeList.map((name,i)=>`<div class="route-stop"><div class="stop-num">${i+1}</div><div class="stop-name">${name}</div><button class="stop-remove" onclick="toggleRoute(null,'${esc(name)}')">✕</button></div>`).join('');
-}
-
-function applyFilters(){renderCards(getFiltered(currentTab));}
 document.getElementById('searchInput').addEventListener('input',applyFilters);
 document.getElementById('pasmSel').addEventListener('change',applyFilters);
 function switchTab(tab,btn){currentTab=tab;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyFilters();}
