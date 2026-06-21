@@ -360,7 +360,13 @@ function toast(msg,dur=2400){const t=document.getElementById('toast');t.textCont
 function esc(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 
 const FB=['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=900&auto=format&fit=crop','https://images.unsplash.com/photo-1469022563149-aa64dbd37dae?q=80&w=900&auto=format&fit=crop'];
-function imgSrc(row,i){const f=sv(row[COL.photo]);if(f)return`zdjęcia/${f}`;return FB[i%FB.length];}
+function imgSrc(row, i) {
+  const f = sv(row[COL.photo]);
+  if (f) {
+    return f.toLowerCase().startsWith('zdjęcia/') ? f : `Zdjęcia/${f}`;
+  }
+  return FB[i % FB.length];
+}
 
 const mainMap=L.map('map').setView([49.55,20.1],7);
 L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap',maxZoom:17}).addTo(mainMap);
